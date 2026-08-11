@@ -1,0 +1,17 @@
+{
+  "name": "arch-content-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/kv": "^2.0.0",
+    "@vercel/edge": "^1.1.1",
+    "resend": "^3.2.0"
+  }
+}

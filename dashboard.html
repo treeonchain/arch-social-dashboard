@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Arch Content Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+<style>
+  :root{
+    --navy:#1A1A2E; --card-navy:#252540; --border-navy:#3E3A8E;
+    --orange:#EC641D; --gold:#FCC76E; --cream:#F3EFD7; --warmwhite:#FFFAF6;
+    --purple-deep:#3E3A8E; --purple-light:#736FB9;
+    --text:#2D2D2D; --muted:#8a8672; --line:#e9e2cf;
+    --sidebar-w:230px; --sidebar-w-collapsed:72px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    background:var(--cream);color:var(--text);}
+
+  /* ===== Sidebar ===== */
+  #sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--navy);
+    color:#fff;display:flex;flex-direction:column;transition:width .18s ease;z-index:20;overflow:hidden;}
+  #sidebar.collapsed{width:var(--sidebar-w-collapsed);}
+  .sb-top{display:flex;align-items:center;gap:10px;padding:22px 20px;border-bottom:1px solid #2f2f4a;
+    min-height:24px;}
+  .sb-top svg{flex:0 0 auto;height:20px;width:auto;}
+  .sb-logo-full{display:block;}
+  #sidebar.collapsed .sb-logo-full{display:none;}
+  .sb-logo-mark{display:none;height:22px;width:auto;}
+  #sidebar.collapsed .sb-logo-mark{display:block;}
+  .sb-toggle{margin-left:auto;background:none;border:none;color:#8b89a8;cursor:pointer;padding:4px;
+    border-radius:6px;flex:0 0 auto;}
+  #sidebar.collapsed .sb-toggle{display:none;}
+  .sb-expand{display:none;position:absolute;top:22px;left:22px;background:none;border:none;
+    color:#8b89a8;cursor:pointer;}
+  #sidebar.collapsed .sb-expand{display:block;}
+  .sb-toggle:hover, .sb-expand:hover{color:#fff;}
+
+  nav.sb-nav{padding:14px 12px;display:flex;flex-direction:column;gap:2px;flex:1;}
+  .sb-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;
+    color:#b7b5cc;text-decoration:none;font-size:13.5px;font-weight:500;white-space:nowrap;
+    cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:inherit;}
+  .sb-item .dot{flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#5c5a7a;}
+  .sb-item:hover{background:#232345;color:#fff;}
+  .sb-item.active{background:linear-gradient(90deg,rgba(236,100,29,.18),transparent);color:#fff;}
+  .sb-item.active .dot{background:var(--orange);}
+  #sidebar.collapsed .sb-item span.label{display:none;}
+  #sidebar.collapsed .sb-item{justify-content:center;}
+
+  .sb-bottom{padding:16px 20px 22px;border-top:1px solid #2f2f4a;font-size:11px;color:#6f6d90;}
+  #sidebar.collapsed .sb-bottom{display:none;}
+
+  /* ===== Main ===== */
+  #app{margin-left:var(--sidebar-w);transition:margin-left .18s ease;min-height:100vh;}
+  #app.collapsed{margin-left:var(--sidebar-w-collapsed);}
+
+  header.topbar{display:flex;align-items:center;justify-content:space-between;
+    padding:24px 40px;border-bottom:1px solid var(--line);background:var(--warmwhite);}
+  header.topbar h1{font-family:Georgia,serif;font-weight:400;font-size:22px;margin:0;letter-spacing:-.2px;}
+  header.topbar p{margin:3px 0 0;font-size:12.5px;color:var(--muted);}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--gold));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;}
+  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .user-email{font-size:12px;color:var(--muted);}
+  .logout-link{font-size:12px;color:var(--muted);text-decoration:underline;}
+  .logout-link:hover{color:var(--orange);}
+
+  main{padding:32px 40px 70px;}
+
+  /* metric cards */
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+  .metric{background:var(--navy);border-radius:12px;padding:20px 22px;color:#fff;position:relative;overflow:hidden;}
+  .metric::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;
+    background:linear-gradient(to right,var(--orange),var(--gold));}
+  .metric .m-label{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--purple-light);
+    font-weight:600;margin-bottom:10px;}
+  .metric .m-value{font-size:30px;font-weight:700;color:var(--orange);font-family:Georgia,serif;}
+  .metric .m-value.gold{color:var(--gold);}
+  .metric .m-value.white{color:#fff;}
+  .metric .m-sub{font-size:11.5px;color:#a9a7c4;margin-top:6px;}
+
+  /* charts row */
+  .charts{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:28px;}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px;}
+  .panel h2{margin:0 0 2px;font-size:15px;font-weight:600;}
+  .panel .p-sub{margin:0 0 16px;font-size:12px;color:var(--muted);}
+  .chart-wrap{position:relative;height:220px;}
+
+  /* table panel */
+  .table-panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .table-head{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid var(--line);
+    flex-wrap:wrap;}
+  .table-head h2{margin:0;font-size:15px;font-weight:600;flex:0 0 auto;margin-right:auto;}
+  .filter-btn{border:1px solid var(--line);background:var(--warmwhite);border-radius:20px;padding:6px 14px;
+    font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .filter-btn.active{background:var(--orange);color:#fff;border-color:var(--orange);}
+  #search{border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:12.5px;
+    font-family:inherit;width:190px;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;padding:11px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;
+    color:var(--muted);border-bottom:1px solid var(--line);font-weight:600;cursor:pointer;user-select:none;
+    background:var(--warmwhite);}
+  th:hover{color:var(--orange);}
+  td{padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5;}
+  tbody tr:hover td{background:#fdfbf5;}
+  .badge{display:inline-block;padding:2px 9px;border-radius:9px;font-size:10.5px;font-weight:700;letter-spacing:.2px;}
+  .bg-a{background:#e7edf7;color:#3a5a9c;}
+  .bg-b{background:#efe9f7;color:#6a4a9c;}
+  .bg-c{background:#f7e9f1;color:#9c4a76;}
+  .st-idea{background:#faf1e0;color:#b8862f;}
+  .st-draft{background:#e7f2ea;color:#4a7a5f;}
+  .st-template{background:#f0ede4;color:#8a8672;}
+  .st-confirmed{background:#e7f2ea;color:#4a7a5f;}
+  .st-likely{background:#faf1e0;color:#b8862f;}
+  .st-tbd{background:#f7e6e2;color:#b8492f;}
+  .preview{color:#4a4636;max-width:420px;}
+
+  .sec{display:none;}
+  .sec.active{display:block;animation:fadeIn .12s ease-in;}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+  .subtabs{display:flex;gap:4px;margin-bottom:18px;background:#fff;border:1px solid var(--line);
+    border-radius:10px;padding:4px;width:fit-content;}
+  .subtab{background:none;border:none;padding:8px 18px;border-radius:7px;font-size:12.5px;
+    font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .subtab.active{background:var(--navy);color:#fff;}
+  .subpanel{display:none;}
+  .subpanel.active{display:block;}
+  .note{font-size:12px;color:var(--muted);line-height:1.6;margin:14px 4px 0;max-width:640px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+  .card h3{margin:0 0 8px;font-size:14.5px;font-weight:600;}
+  .card p{margin:0 0 8px;font-size:13px;line-height:1.55;color:#3a382f;}
+  .card .angles{font-size:12px;color:var(--muted);line-height:1.6;}
+
+  .urgent-group{margin-bottom:26px;}
+  .urgent-group h4{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+    margin:0 0 10px;font-weight:600;}
+  .u-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+  .u-item:last-child{border-bottom:none;}
+  .u-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;margin-top:6px;}
+  .u-dot.red{background:#c0523d;} .u-dot.amber{background:#b8862f;}
+  .u-dot.green{background:#4a7a5f;} .u-dot.grey{background:#c9c3ae;}
+  .u-title{font-size:14px;font-weight:600;margin:0 0 3px;}
+  .u-desc{font-size:12.5px;color:#5a5645;line-height:1.5;margin:0;}
+  .u-tag{font-size:10px;color:var(--muted);font-family:ui-monospace,monospace;margin-left:8px;font-weight:400;}
+  .banner{background:#fdf3e0;border:1px solid #e8d4a0;color:#7a5a1f;border-radius:10px;
+    padding:12px 16px;font-size:12.5px;line-height:1.5;margin-bottom:20px;}
+
+  /* ===== review: editable copy, approval, feedback ===== */
+  [contenteditable="true"]{outline:none;border-radius:4px;}
+  [contenteditable="true"]:hover{background:#fdf8ec;cursor:text;}
+  [contenteditable="true"]:focus{background:#fffaea;box-shadow:0 0 0 2px var(--gold) inset;}
+  .review-cell{min-width:150px;}
+  .status-pill{display:inline-block;cursor:pointer;padding:3px 10px;border-radius:12px;font-size:10.5px;
+    font-weight:700;letter-spacing:.2px;border:1px solid transparent;user-select:none;white-space:nowrap;}
+  .status-pill.pending{background:#f0ede4;color:#8a8672;}
+  .status-pill.approved{background:#e7f2ea;color:#4a7a5f;}
+  .status-pill.rejected{background:#f7e6e2;color:#b8492f;}
+  .fb-toggle{display:block;background:none;border:none;color:var(--orange);font-size:11px;cursor:pointer;
+    text-decoration:underline;padding:0;margin-top:5px;font-family:inherit;}
+  .fb-box{width:100%;margin-top:6px;font-size:12px;font-family:inherit;border:1px solid var(--line);
+    border-radius:6px;padding:6px 8px;resize:vertical;min-height:44px;background:#fffaf0;}
+  .card .review-cell{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+
+  /* ===== schedule / calendar ===== */
+  .cal-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .cal-head h2{margin:0;font-size:16px;font-weight:600;min-width:170px;}
+  .cal-nav{background:var(--warmwhite);border:1px solid var(--line);border-radius:8px;width:30px;height:30px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);}
+  .cal-nav:hover{border-color:var(--orange);color:var(--orange);}
+  .cal-today{margin-left:auto;background:var(--warmwhite);border:1px solid var(--line);border-radius:20px;
+    padding:6px 14px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .cal-today:hover{border-color:var(--orange);color:var(--orange);}
+  .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:6px;}
+  .cal-weekdays div{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
+    font-weight:600;text-align:center;padding:4px 0;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+  .cal-day{min-height:104px;border:1px solid var(--line);border-radius:10px;padding:8px;
+    background:var(--warmwhite);display:flex;flex-direction:column;gap:5px;}
+  .cal-day.pad{background:transparent;border-color:transparent;}
+  .cal-day.today{border-color:var(--orange);background:#fff7ee;}
+  .cal-daynum{display:flex;align-items:center;justify-content:space-between;font-size:12px;
+    font-weight:700;color:var(--muted);}
+  .cal-day.today .cal-daynum{color:var(--orange);}
+  .cal-add{background:none;border:1px dashed var(--line);border-radius:6px;color:var(--muted);
+    cursor:pointer;font-size:13px;line-height:1;width:20px;height:20px;display:flex;align-items:center;
+    justify-content:center;font-family:inherit;}
+  .cal-add:hover{border-color:var(--orange);color:var(--orange);}
+  .cal-chips{display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
+  .cal-chip{display:flex;align-items:center;gap:5px;font-size:10.5px;padding:3px 6px;border-radius:6px;
+    line-height:1.3;}
+  .cal-chip span.chip-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cal-chip button{background:none;border:none;color:inherit;opacity:.55;cursor:pointer;font-size:11px;
+    padding:0;line-height:1;font-family:inherit;}
+  .cal-chip button:hover{opacity:1;}
+  .cal-chip.type-sf{background:#efe9f7;color:#6a4a9c;}
+  .cal-chip.type-lf{background:#e7edf7;color:#3a5a9c;}
+  .cal-chip.type-pl{background:#f7e9f1;color:#9c4a76;}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(26,26,46,.45);z-index:40;
+    display:flex;align-items:center;justify-content:center;}
+  .modal-box{background:#fff;border-radius:14px;width:520px;max-width:92vw;max-height:78vh;
+    display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px;}
+  .modal-head h3{margin:0;font-size:15px;font-weight:600;}
+  .modal-close{background:none;border:none;font-size:22px;line-height:1;color:var(--muted);cursor:pointer;}
+  .modal-close:hover{color:var(--orange);}
+  #modalSearch{margin:0 20px 12px;width:calc(100% - 40px);border:1px solid var(--line);border-radius:8px;
+    padding:8px 12px;font-size:12.5px;font-family:inherit;}
+  .modal-list{overflow-y:auto;padding:0 12px 16px;}
+  .modal-item{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:8px;cursor:pointer;}
+  .modal-item:hover{background:var(--warmwhite);}
+  .modal-item .badge{flex:0 0 auto;}
+  .modal-item .mi-text{font-size:12.5px;color:#3a382f;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;}
+</style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div class="sb-top">
+    <button class="sb-expand" id="expandBtn" title="Expand">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <svg class="sb-logo-full" viewBox="0 0 367 106" xmlns="http://www.w3.org/2000/svg">
+      <path d="M102.909 105.071H98.112C97.6101 105.071 97.1386 104.816 96.8709 104.384L73.7036 67.1292C73.1591 66.2592 72.3104 66.1649 71.9697 66.1649C71.6321 66.1649 70.7712 66.2562 70.2358 67.1292L47.0685 104.384C46.8008 104.816 46.3293 105.071 45.8274 105.071H41.0303C39.8835 105.071 39.1838 103.809 39.7892 102.835L64.301 63.4363C65.9619 60.7594 68.8335 59.1715 71.9788 59.1715C75.1272 59.1715 77.9958 60.7594 79.6567 63.4363L104.169 102.835C104.774 103.809 104.077 105.071 102.927 105.071H102.909Z" fill="white"/>
+      <path d="M116.102 105.074H111.305C110.803 105.074 110.332 104.819 110.064 104.387L75.1186 48.1965C74.422 47.0801 73.2843 46.4443 71.9702 46.4443C70.6591 46.4443 69.5093 47.0801 68.8218 48.1965L33.8761 104.387C33.6084 104.819 33.1369 105.074 32.635 105.074H27.8379C26.6911 105.074 25.9914 103.812 26.5968 102.839L62.8778 44.5066C64.846 41.34 68.2408 39.4509 71.9702 39.4509C73.8349 39.4509 75.6083 39.9224 77.1779 40.7955C78.7354 41.6655 80.0799 42.9278 81.0625 44.5066L117.341 102.839C117.949 103.812 117.249 105.074 116.102 105.074Z" fill="white"/>
+      <path d="M129.286 105.071H124.489C123.987 105.071 123.516 104.815 123.248 104.383L76.5331 29.26C75.5292 27.6508 73.8683 26.7291 71.9702 26.7291C70.072 26.7291 68.4142 27.6508 67.4073 29.26L20.6954 104.383C20.4278 104.815 19.9563 105.071 19.4543 105.071H14.6572C13.5104 105.071 12.8108 103.809 13.4161 102.835L61.4725 25.558C63.6961 21.9807 67.5107 19.8057 71.7147 19.7236C76.1437 19.6323 80.2655 21.9898 82.6108 25.7527L130.546 102.826C131.151 103.799 130.454 105.062 129.304 105.062L129.286 105.071Z" fill="white"/>
+      <path d="M142.479 105.071H137.681C137.179 105.071 136.708 104.816 136.44 104.384L77.9471 10.3243C76.636 8.2132 74.461 7.00252 71.9697 7.00252C69.4783 7.00252 67.3064 8.2132 65.9923 10.3243L7.50209 104.384C7.2344 104.816 6.7629 105.071 6.26098 105.071H1.46386C0.317055 105.071 -0.382589 103.809 0.222755 102.835L60.0605 6.62228C62.6431 2.48221 67.0935 0 71.9818 0C76.8733 0 81.3206 2.47005 83.9032 6.62228L143.738 102.835C144.343 103.809 143.647 105.071 142.5 105.071H142.479Z" fill="white"/>
+      <path d="M340.292 104.947V66.7279H346.516V80.6782L346.205 88.5598L351.34 82.5977L357.409 76.3222H365.445L355.489 86.2784L367 104.947H359.794L351.133 90.6861L346.519 95.3008V104.947H340.292ZM331.008 85.7613C331.008 82.8562 329.712 80.9398 327.172 80.9398C324.684 80.9398 322.454 83.1178 320.431 87.267V104.947H314.259V76.3222H320.169L320.325 80.4714C322.451 77.4112 325.094 75.7016 328.361 75.7016C333.651 75.7016 337.229 79.2789 337.229 85.7613V89.3386H331.005V85.7613H331.008ZM287.828 90.6344C287.828 96.7548 290.991 100.487 296.074 100.487C301.157 100.487 304.266 96.7548 304.266 90.6344C304.266 84.5141 301.154 80.7816 296.074 80.7816C290.991 80.7816 287.828 84.5141 287.828 90.6344ZM296.074 105.57C287.104 105.57 281.659 99.9184 281.659 90.6344C281.659 81.3505 287.104 75.6986 296.074 75.6986C305.045 75.6986 310.49 81.3505 310.49 90.6344C310.49 99.9184 305.045 105.57 296.074 105.57ZM247.848 104.947L239.604 76.3222H245.776L250.184 91.7752L251.686 99.6051L253.296 92.1372L257.807 76.3222H263.666L268.28 92.1372L269.889 99.7085L271.444 91.7752L275.852 76.3222H281.71L273.515 104.947H266.412L262.005 89.7523L260.657 83.0631L259.31 89.7523L254.899 104.947H247.848ZM235.208 104.947C229.505 104.947 226.445 101.111 226.445 95.6658V81.3535H221.258V76.3222H226.445V71.1874L232.668 68.0755V76.3191H238.786V81.3505H232.668V95.6628C232.668 98.5678 233.757 99.9154 237.542 99.9154H241.794V104.947H235.208ZM200.08 86.175H215.171C214.913 82.8562 212.008 80.6782 208.014 80.6782C203.916 80.6782 201.221 82.5977 200.08 86.175ZM207.755 105.57C198.733 105.57 193.236 99.9184 193.236 90.5827C193.236 81.3535 198.836 75.7016 208.014 75.7016C217.243 75.7016 222.119 81.4052 221.495 90.6375H199.405V90.8443C199.405 96.4962 202.362 100.49 207.755 100.49C211.852 100.49 214.754 98.4157 215.378 95.1487H221.602C220.717 101.628 215.481 105.57 207.755 105.57ZM159.401 104.947V68.7508H166.868L183.462 96.5966L182.528 83.2182V68.7508H189.062V104.947H181.594L164.949 77.0492L165.935 90.4793V104.947H159.401ZM268.743 42.3925C268.743 38.6601 266.513 36.2204 263.246 36.2204C259.772 36.2204 257.022 38.3468 254.947 43.0648V60.2304H248.775V22.0116H254.947V35.8067C257.332 32.5397 260.703 30.9853 264.387 30.9853C270.869 30.9853 274.915 35.393 274.915 42.0305V60.2304H268.743V42.3925ZM232.06 60.854C223.141 60.854 217.644 55.0986 217.644 45.9181C217.644 36.7406 223.193 30.9822 232.163 30.9822C239.735 30.9822 244.815 35.1314 245.335 41.7689H239.163C238.591 38.2433 235.896 36.117 232.163 36.117C227.029 36.117 223.816 39.9012 223.816 45.9181C223.816 51.9867 226.98 55.8226 232.06 55.8226C235.637 55.8226 238.491 53.6963 239.321 50.2741H245.493C244.611 56.7565 239.424 60.854 232.06 60.854ZM209.665 41.0449C209.665 38.1399 208.369 36.2235 205.829 36.2235C203.341 36.2235 201.111 38.4015 199.089 42.5507V60.2304H192.916V31.6058H198.827L198.982 35.755C201.108 32.6948 203.752 30.9853 207.019 30.9853C212.309 30.9853 215.886 34.5626 215.886 41.0449V44.6222H209.662V41.0449H209.665ZM167.696 45.6595H178.638L175.371 36.6372L173.193 29.3761L170.911 36.6372L167.696 45.6595ZM168.94 24.0345H177.549L190.772 60.2304H183.876L180.609 51.1046H165.728L162.461 60.2304H155.771L168.94 24.0345Z" fill="white"/>
+    </svg>
+    <svg class="sb-logo-mark" viewBox="0 0 144 106" xmlns="http://www.w3.org/2000/svg">
+      <path d="M102.909 105.071H98.112C97.6101 105.071 97.1386 104.816 96.8709 104.384L73.7036 67.1292C73.1591 66.2592 72.3104 66.1649 71.9697 66.1649C71.6321 66.1649 70.7712 66.2562 70.2358 67.1292L47.0685 104.384C46.8008 104.816 46.3293 105.071 45.8274 105.071H41.0303C39.8835 105.071 39.1838 103.809 39.7892 102.835L64.301 63.4363C65.9619 60.7594 68.8335 59.1715 71.9788 59.1715C75.1272 59.1715 77.9958 60.7594 79.6567 63.4363L104.169 102.835C104.774 103.809 104.077 105.071 102.927 105.071H102.909Z" fill="#FCC76E"/>
+      <path d="M116.102 105.074H111.305C110.803 105.074 110.332 104.819 110.064 104.387L75.1186 48.1965C74.422 47.0801 73.2843 46.4443 71.9702 46.4443C70.6591 46.4443 69.5093 47.0801 68.8218 48.1965L33.8761 104.387C33.6084 104.819 33.1369 105.074 32.635 105.074H27.8379C26.6911 105.074 25.9914 103.812 26.5968 102.839L62.8778 44.5066C64.846 41.34 68.2408 39.4509 71.9702 39.4509C73.8349 39.4509 75.6083 39.9224 77.1779 40.7955C78.7354 41.6655 80.0799 42.9278 81.0625 44.5066L117.341 102.839C117.949 103.812 117.249 105.074 116.102 105.074Z" fill="#FCC76E"/>
+      <path d="M129.286 105.071H124.489C123.987 105.071 123.516 104.815 123.248 104.383L76.5331 29.26C75.5292 27.6508 73.8683 26.7291 71.9702 26.7291C70.072 26.7291 68.4142 27.6508 67.4073 29.26L20.6954 104.383C20.4278 104.815 19.9563 105.071 19.4543 105.071H14.6572C13.5104 105.071 12.8108 103.809 13.4161 102.835L61.4725 25.558C63.6961 21.9807 67.5107 19.8057 71.7147 19.7236C76.1437 19.6323 80.2655 21.9898 82.6108 25.7527L130.546 102.826C131.151 103.799 130.454 105.062 129.304 105.062L129.286 105.071Z" fill="#FCC76E"/>
+      <path d="M142.479 105.071H137.681C137.179 105.071 136.708 104.816 136.44 104.384L77.9471 10.3243C76.636 8.2132 74.461 7.00252 71.9697 7.00252C69.4783 7.00252 67.3064 8.2132 65.9923 10.3243L7.50209 104.384C7.2344 104.816 6.7629 105.071 6.26098 105.071H1.46386C0.317055 105.071 -0.382589 103.809 0.222755 102.835L60.0605 6.62228C62.6431 2.48221 67.0935 0 71.9818 0C76.8733 0 81.3206 2.47005 83.9032 6.62228L143.738 102.835C144.343 103.809 143.647 105.071 142.5 105.071H142.479Z" fill="#FCC76E"/>
+    </svg>
+    <button class="sb-toggle" id="collapseBtn" title="Collapse">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+  </div>
+
+  <nav class="sb-nav">
+    <button class="sb-item active" data-section="dashboard"><span class="dot"></span><span class="label">Dashboard</span></button>
+    <button class="sb-item" data-section="content"><span class="dot"></span><span class="label">Content</span></button>
+    <button class="sb-item" data-section="schedule"><span class="dot"></span><span class="label">Schedule</span></button>
+    <button class="sb-item" data-section="catalysts"><span class="dot"></span><span class="label">Catalyst map</span></button>
+    <button class="sb-item" data-section="pillars"><span class="dot"></span><span class="label">Pillars</span></button>
+    <button class="sb-item" data-section="buckets"><span class="dot"></span><span class="label">Buckets</span></button>
+    <button class="sb-item" data-section="urgent"><span class="dot"></span><span class="label">Urgent</span></button>
+  </nav>
+
+  <div class="sb-bottom">Arch internal tool<br>Not for external use</div>
+</aside>
+
+<div id="app">
+  <header class="topbar">
+    <div>
+      <h1>Content dashboard</h1>
+    </div>
+    <div class="topbar-right">
+      <span class="user-email" id="userEmail"></span>
+      <a class="logout-link" href="/api/auth/logout">Sign out</a>
+      <div class="avatar">T</div>
+    </div>
+  </header>
+
+  <main>
+
+    <section id="sec-dashboard" class="sec active">
+      <div class="metrics" id="metrics"></div>
+      <div class="charts">
+        <div class="panel">
+          <h2>Content by bucket</h2>
+          <p class="p-sub">39 drafted items across the three content directions</p>
+          <div class="chart-wrap"><canvas id="bucketChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <h2>Catalyst status</h2>
+          <p class="p-sub">18 GTM catalysts, by confidence</p>
+          <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-content" class="sec">
+      <div class="subtabs">
+        <button class="subtab active" data-sub="shortform">Shortform</button>
+        <button class="subtab" data-sub="longform">Longform</button>
+        <button class="subtab" data-sub="polls">Polls</button>
+      </div>
+
+      <div id="sub-shortform" class="subpanel active">
+        <div class="table-panel">
+          <div class="table-head">
+            <h2>Shortform, X posts and threads</h2>
+            <button class="filter-btn active" data-f="all">All</button>
+            <button class="filter-btn" data-f="A">Macro</button>
+            <button class="filter-btn" data-f="B">Education</button>
+            <button class="filter-btn" data-f="C">Campaigns</button>
+            <input id="search" type="text" placeholder="Search copy...">
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th data-k="bucket">Bucket</th>
+                <th data-k="pillar">Pillar</th>
+                <th data-k="format">Format</th>
+                <th data-k="preview">Preview</th>
+                <th data-k="status">Status</th>
+                <th>Review</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="sub-longform" class="subpanel">
+        <div class="table-panel">
+          <div class="table-head"><h2>Longform, blog and light paper</h2></div>
+          <table>
+            <thead><tr><th>Title</th><th>Bucket</th><th>Status</th><th>Source</th><th>Review</th></tr></thead>
+            <tbody id="longformBody"></tbody>
+          </table>
+        </div>
+        <p class="note">Four idea batches (about 50 concepts total) are logged in TASK-QUEUE.md, evergreen, Arch-education, and prime-broker/macro lanes, awaiting picks. The nine titles above are the confirmed evergreen batch, everything else is summarized there rather than repeated here to avoid restating unverified specifics.</p>
+      </div>
+
+      <div id="sub-polls" class="subpanel">
+        <div class="grid" id="pollsGrid"></div>
+      </div>
+    </section>
+
+    <section id="sec-schedule" class="sec">
+      <div class="table-panel" style="padding:22px 24px;">
+        <div class="cal-head">
+          <button class="cal-nav" id="calPrev" title="Previous month">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <h2 id="calLabel">Month Year</h2>
+          <button class="cal-nav" id="calNext" title="Next month">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <button class="cal-today" id="calToday">Today</button>
+        </div>
+        <div class="cal-weekdays">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div class="cal-grid" id="calendarGrid"></div>
+      </div>
+    </section>
+
+    <div class="modal-overlay" id="scheduleModal" style="display:none;">
+      <div class="modal-box">
+        <div class="modal-head">
+          <h3 id="modalDateLabel">Schedule content</h3>
+          <button class="modal-close" id="modalClose">&times;</button>
+        </div>
+        <input id="modalSearch" type="text" placeholder="Search content...">
+        <div class="modal-list" id="modalList"></div>
+      </div>
+    </div>
+
+    <section id="sec-catalysts" class="sec">
+      <div class="table-panel">
+        <div class="table-head"><h2>GTM catalyst map</h2></div>
+        <table>
+          <thead><tr><th>Phase</th><th>Catalyst</th><th>Status</th><th>Beat</th><th>Review</th></tr></thead>
+          <tbody id="catalystBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="sec-pillars" class="sec">
+      <div class="grid" id="pillarsGrid"></div>
+    </section>
+
+    <section id="sec-buckets" class="sec">
+      <div class="grid" id="bucketsGrid"></div>
+    </section>
+
+    <section id="sec-urgent" class="sec">
+      <div class="table-panel" style="padding:24px;">
+        <h2 style="margin:0 0 14px;">Urgent</h2>
+        <div id="urgentList"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+const LS_PREFIX = 'archdash_';
+let __state = {};
+let __saveTimer = null;
+let __currentUserEmail = null;
+
+async function loadRemoteState(){
+  // Seed from this browser's local cache first (works offline / opened as a
+  // plain file), then let the shared server state overwrite it if reachable.
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith(LS_PREFIX)){
+        __state[k.slice(LS_PREFIX.length)] = localStorage.getItem(k);
+      }
+    }
+  }catch(e){}
+  try{
+    const meRes = await fetch('/api/auth/me');
+    if(meRes.ok){
+      const me = await meRes.json();
+      __currentUserEmail = me.email;
+    }
+  }catch(e){}
+  try{
+    const res = await fetch('/api/state');
+    if(res.ok){
+      const remote = await res.json();
+      __state = Object.assign({}, __state, remote);
+    }
+  }catch(e){
+    console.warn('Could not reach /api/state, working from this browser only. Deploy to Vercel with the KV integration connected to sync everyone.', e);
+  }
+}
+function saveRemoteState(){
+  clearTimeout(__saveTimer);
+  __saveTimer = setTimeout(()=>{
+    fetch('/api/state', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(__state)
+    }).catch(e=>console.warn('Save to shared state failed, change is only saved locally for now.', e));
+  }, 400);
+}
+function lsGet(key, fallback){
+  const v = __state[key];
+  return (v===undefined || v===null) ? fallback : v;
+}
+function lsSet(key, val){
+  __state[key] = val;
+  try{ localStorage.setItem(LS_PREFIX+key, val); }catch(e){}
+  saveRemoteState();
+}
+
+async function boot(){
+await loadRemoteState();
+
+if(document.getElementById('userEmail') && __currentUserEmail){
+  document.getElementById('userEmail').textContent = __currentUserEmail;
+}
+
+const items = [
+  {bucket:"B",pillar:"Pillar 1",format:"Single",status:"Draft",preview:"Programs can't own Bitcoin, not really. They can watch, wrap, or bridge a UTXO, none of that is the same as holding it the way a person can."},
+  {bucket:"B",pillar:"Pillar 1",format:"Single",status:"Draft",preview:"Been explaining this to people all week: every Bitcoin lending product works because a company holds your BTC and tells you it's fine, not because a program can verify it."},
+  {bucket:"B",pillar:"Pillar 2",format:"Single",status:"Draft",preview:"Hyperliquid proved perps didn't need a middleman between you and your position. We're doing the same thing to Bitcoin margin. Not lending. Margin."},
+  {bucket:"B",pillar:"Pillar 2",format:"Single",status:"Draft",preview:"A prime broker sees your position, not just your collateral. That's the whole difference between margin and a loan. Bitcoin's never had the first kind."},
+  {bucket:"B",pillar:"Pillar 3",format:"Single",status:"Draft",preview:"Every blowup from the last cycle traces back to the same sentence: trust us, the collateral's still there. Not a Bitcoin problem, a can't verify anything problem."},
+  {bucket:"B",pillar:"Pillar 3",format:"Single",status:"Draft",preview:"Reread the post-mortems from the last lending cycle this week. Every one has the same missing piece: nobody outside the company could see where the Bitcoin went."},
+  {bucket:"B",pillar:"Pillar 4",format:"Single",status:"Draft",preview:"Margin call. Haircut. Cross-margining. TradFi terms, all of them, and all about to matter a lot more to Bitcoin holders than they currently do."},
+  {bucket:"B",pillar:"Pillar 5",format:"Single",status:"Draft",preview:"We didn't build an app on someone else's chain and hope it holds up. Own VM. Own consensus. Own validators. Everything else sits on top of that."},
+  {bucket:"B",pillar:"Pillar 1/2",format:"Single",status:"Draft",preview:"Spent years in calls where someone pitches Bitcoin holders yield that's really: hand us your coins, trust us, wait. Never once heard a pitch for real credit without giving up custody."},
+  {bucket:"B",pillar:"Pillar 1",format:"Single",status:"Draft",preview:"People hear programmable collateral and assume they're trusting us like a custodian. Not the claim. You're trusting a distributed validator set under threshold assumptions."},
+  {bucket:"B",pillar:"Pillar 2",format:"Single",status:"Draft",preview:"What Hyperliquid did for perps, Arch Prime is doing for Bitcoin margining. Not because the products match, because the underlying move does."},
+  {bucket:"B",pillar:"Pillar 3",format:"Single",status:"Draft",preview:"Go back and look at what actually broke last cycle. It wasn't Bitcoin. What broke was the layer around it, collateral nobody could verify."},
+  {bucket:"B",pillar:"Pillar 4",format:"Single",status:"Draft",preview:"A haircut is the discount a lender applies to your collateral before deciding how much credit to extend. None of this is new, it's just never been available against Bitcoin."},
+  {bucket:"B",pillar:"Pillar 1",format:"Single",status:"Draft",preview:"Settlement gets used loosely in crypto. On Bitcoin's base layer it means one thing: the state of ownership is final and provable, not provisional."},
+  {bucket:"B",pillar:"Pillar 3",format:"Single",status:"Draft",preview:"Custody is who's holding the asset. Control is who can actually move it, under what conditions. You can have custody without control, that's basically what a bridge is."},
+  {bucket:"B",pillar:"Pillar 1",format:"Single",status:"Draft",preview:"Wrapped BTC is a claim on Bitcoin held somewhere else, secured by whoever runs that bridge. Bitcoin-native means the asset itself, under a mechanism you can inspect."},
+  {bucket:"B",pillar:"Pillar 1",format:"Thread",status:"Draft",preview:"Enforceable counterparty credit sounds like jargon until you sit with what it rules out. A thread on why most Bitcoin credit doesn't clear that bar."},
+  {bucket:"B",pillar:"Pillar 1",format:"Single",status:"Draft",preview:"A validator threshold is a specific engineering tradeoff. No single party can move the asset alone, it takes a defined portion of a distributed set agreeing."},
+  {bucket:"B",pillar:"Pillar 5",format:"Single",status:"Draft",preview:"Building your own VM instead of shipping on somebody else's chain is the slower path. The tradeoff: not waiting on someone else's roadmap to ship."},
+  {bucket:"B",pillar:"Pillar 3",format:"Single",status:"Draft",preview:"Haven't we seen this movie before is a fair question. The honest answer: last cycle's failures were opacity, not the idea. The fix is making collateral checkable."},
+  {bucket:"B",pillar:"Pillar 2",format:"Single",status:"Draft",preview:"Capital efficiency sounds like a slide-deck word until it's concrete. It's the difference between a protocol that only sees your collateral and one that sees collateral and position together."},
+  {bucket:"B",pillar:"Pillar 1",format:"Single",status:"Draft",preview:"Programmable collateral doesn't mean Bitcoin becomes programmable. Bitcoin stays exactly what it is. What changes is what a program can do with it."},
+  {bucket:"B",pillar:"Pillar 4",format:"Thread",status:"Draft",preview:"Margin call, haircut, cross-margining show up constantly in prime-brokerage talk and mean almost nothing outside TradFi. A thread translating the vocabulary."},
+  {bucket:"A",pillar:"–",format:"Single",status:"Draft",preview:"Roughly every two weeks Bitcoin has adjusted its own mining difficulty since block one. No committee vote, no emergency session. Seventeen years of that is the record."},
+  {bucket:"A",pillar:"–",format:"Single",status:"Idea",preview:"Spot ETF flow data is the closest thing Bitcoin has to a real-time institutional demand gauge. Worth watching the multi-week trend, not any single day's print."},
+  {bucket:"A",pillar:"–",format:"Single",status:"Idea",preview:"Something changed in how policymakers talk about Bitcoin this year. Used to be a paragraph about risk, now it's showing up in reserve-asset conversations."},
+  {bucket:"A",pillar:"–",format:"Single",status:"Draft",preview:"Every fiat currency in history has had a discretionary supply. Bitcoin doesn't have that lever. 21 million is a hard cap, not a policy goal."},
+  {bucket:"A",pillar:"–",format:"Single",status:"Draft",preview:"Every four years the reward gets cut in half and nobody has to show up to a meeting to make it happen. Try naming another monetary system with that property."},
+  {bucket:"A",pillar:"–",format:"Single",status:"Draft",preview:"Read a custodial exchange's terms of service this week, the paragraph about what happens if they go insolvent. That paragraph doesn't exist for self-custodied Bitcoin."},
+  {bucket:"A",pillar:"–",format:"Single",status:"Draft",preview:"Central banks publish forward guidance and revise it. Bitcoin publishes its issuance schedule once, in code, and the market gets to just know."},
+  {bucket:"A",pillar:"–",format:"Thread",status:"Idea",preview:"Nation-states and sovereign wealth vehicles keep showing up in Bitcoin conversations that used to be purely retail. A thread on why that shouldn't be graded like retail adoption."},
+  {bucket:"A",pillar:"–",format:"Single",status:"Idea",preview:"Balance sheets used to hold cash and short-duration treasuries. That list has quietly gotten longer. The trend line matters more than any single quarter's flows."},
+  {bucket:"A",pillar:"–",format:"Single",status:"Draft",preview:"There's a moment in every downturn where BTC starts moving independently of the Nasdaq again, and someone always acts surprised. Watching that gap this week."},
+  {bucket:"A",pillar:"–",format:"Single",status:"Draft",preview:"A share can be diluted by a board decision. A currency can be diluted by a central bank decision. Bitcoin's supply schedule is a constant."},
+  {bucket:"A",pillar:"–",format:"Thread",status:"Idea",preview:"Coins that haven't moved in over a year keep making up a larger share of total supply. A thread on why long-term holder behavior is worth watching."},
+  {bucket:"C",pillar:"Pillar 5",format:"Template",status:"Template",preview:"Partnership-announcement thread: the news itself, why it matters, what it unlocks. Not draftable until a real partnership date exists."},
+  {bucket:"C",pillar:"Pillar 5",format:"Template",status:"Template",preview:"Why we partnered with X, a longer-form explainer on structural rationale over hype. Needs Brand-Comms sign-off before drafting."},
+  {bucket:"C",pillar:"Pillar 5",format:"Template",status:"Template",preview:"Co-marketing quote-post, paired posting timed with the partner's own account. Format only, no partner named yet."},
+  {bucket:"C",pillar:"Pillar 5",format:"Template",status:"Template",preview:"Ecosystem spotlight, builders on Arch, lower stakes and could run before a formal announcement if the partner is comfortable."},
+];
+
+// ---- metrics ----
+const counts = {A:0,B:0,C:0};
+items.forEach(i=>counts[i.bucket]++);
+const metrics = [
+  {label:"Total content drafted",value:items.length,cls:"white",sub:items.length+" items across all buckets"},
+  {label:"Launch sequence",value:"2 / 7",cls:"gold",sub:"steps active now"},
+  {label:"Open catalysts",value:"18",cls:"white",sub:"3 confirmed, 5 likely, 10 TBD"},
+  {label:"Needs your attention",value:"13",cls:"gold",sub:"decisions, picks, and housekeeping"},
+];
+document.getElementById('metrics').innerHTML = metrics.map(m=>`
+  <div class="metric">
+    <div class="m-label">${m.label}</div>
+    <div class="m-value ${m.cls}">${m.value}</div>
+    <div class="m-sub">${m.sub}</div>
+  </div>`).join('');
+
+// ---- charts ----
+new Chart(document.getElementById('bucketChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Bullish BTC / Macro', 'Arch Education', 'Campaigns & Partnerships'],
+    datasets: [{
+      data: [counts.A, counts.B, counts.C],
+      backgroundColor: ['#736FB9', '#EC641D', '#FCC76E'],
+      borderRadius: 6,
+      barThickness: 46,
+    }]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{ y:{ beginAtZero:true, grid:{color:'#f0ead9'} }, x:{ grid:{display:false} } }
+  }
+});
+
+new Chart(document.getElementById('statusChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Confirmed', 'Likely', 'TBD'],
+    datasets: [{
+      data: [3, 5, 10],
+      backgroundColor: ['#4a7a5f', '#b8862f', '#c0523d'],
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11} } } }
+  }
+});
+
+// ---- review: editable copy, approval status, feedback (persisted locally per browser) ----
+
+function editedText(id, original){
+  const saved = lsGet('edit_'+id, null);
+  return saved !== null ? saved : original;
+}
+
+function reviewCellHTML(id){
+  const status = lsGet('status_'+id, 'pending');
+  const label = status==='approved' ? 'Approved' : status==='rejected' ? 'Needs changes' : 'Pending review';
+  const fb = lsGet('fb_'+id, '');
+  return `
+    <div class="review-cell">
+      <span class="status-pill ${status}" data-status-id="${id}">${label}</span>
+      <button class="fb-toggle" data-fb-toggle="${id}">${fb ? 'Edit feedback' : '+ feedback'}</button>
+      <textarea class="fb-box" data-fb-id="${id}" placeholder="Notes for the team..." style="display:${fb ? 'block' : 'none'}">${fb}</textarea>
+    </div>`;
+}
+
+function wireReviewControls(){
+  document.querySelectorAll('[data-status-id]').forEach(el=>{
+    el.onclick = ()=>{
+      const id = el.dataset.statusId;
+      const cur = lsGet('status_'+id,'pending');
+      const next = cur==='pending' ? 'approved' : cur==='approved' ? 'rejected' : 'pending';
+      lsSet('status_'+id, next);
+      el.className = 'status-pill '+next;
+      el.textContent = next==='approved' ? 'Approved' : next==='rejected' ? 'Needs changes' : 'Pending review';
+    };
+  });
+  document.querySelectorAll('[data-fb-toggle]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.fbToggle;
+      const box = document.querySelector(`[data-fb-id="${CSS.escape(id)}"]`);
+      if(!box) return;
+      const show = box.style.display === 'none';
+      box.style.display = show ? 'block' : 'none';
+      if(show) box.focus();
+    };
+  });
+  document.querySelectorAll('[data-fb-id]').forEach(box=>{
+    box.onblur = ()=>{
+      const id = box.dataset.fbId;
+      lsSet('fb_'+id, box.value);
+      const btn = document.querySelector(`[data-fb-toggle="${CSS.escape(id)}"]`);
+      if(btn) btn.textContent = box.value ? 'Edit feedback' : '+ feedback';
+    };
+  });
+  document.querySelectorAll('[data-edit-id]').forEach(el=>{
+    el.onblur = ()=>{ lsSet('edit_'+el.dataset.editId, el.textContent); };
+  });
+}
+
+// ---- table ----
+let activeFilter = 'all';
+let sortKey = null, sortDir = 1;
+
+function statusClass(s){
+  if(s==='Idea') return 'st-idea';
+  if(s==='Draft') return 'st-draft';
+  return 'st-template';
+}
+function bucketClass(b){
+  return b==='A' ? 'bg-a' : b==='B' ? 'bg-b' : 'bg-c';
+}
+function bucketLabel(b){
+  return b==='A' ? 'Macro' : b==='B' ? 'Education' : 'Campaign';
+}
+
+function render(){
+  const q = document.getElementById('search').value.toLowerCase();
+  let rows = items.filter(i => (activeFilter==='all' || i.bucket===activeFilter)
+    && i.preview.toLowerCase().includes(q));
+  if(sortKey){
+    rows = rows.slice().sort((a,b)=>{
+      const av=a[sortKey], bv=b[sortKey];
+      return av.localeCompare(bv) * sortDir;
+    });
+  }
+  document.getElementById('tableBody').innerHTML = rows.map(i=>{
+    const id = 'sf-'+items.indexOf(i);
+    return `
+    <tr>
+      <td><span class="badge ${bucketClass(i.bucket)}">${bucketLabel(i.bucket)}</span></td>
+      <td>${i.pillar}</td>
+      <td>${i.format}</td>
+      <td class="preview" contenteditable="true" data-edit-id="${id}">${editedText(id, i.preview)}</td>
+      <td><span class="badge ${statusClass(i.status)}">${i.status}</span></td>
+      <td>${reviewCellHTML(id)}</td>
+    </tr>`;
+  }).join('');
+  wireReviewControls();
+}
+render();
+
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.f;
+    render();
+  });
+});
+document.getElementById('search').addEventListener('input', render);
+document.querySelectorAll('th[data-k]').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const k = th.dataset.k;
+    sortDir = (sortKey===k) ? -sortDir : 1;
+    sortKey = k;
+    render();
+  });
+});
+
+// ---- sidebar collapse ----
+const sidebar = document.getElementById('sidebar');
+const app = document.getElementById('app');
+document.getElementById('collapseBtn').addEventListener('click', ()=>{
+  sidebar.classList.add('collapsed'); app.classList.add('collapsed');
+});
+document.getElementById('expandBtn').addEventListener('click', ()=>{
+  sidebar.classList.remove('collapsed'); app.classList.remove('collapsed');
+});
+
+// ---- section switching ----
+document.querySelectorAll('.sb-item[data-section]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.sb-item[data-section]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const target = btn.dataset.section;
+    document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+    document.getElementById('sec-'+target).classList.add('active');
+  });
+});
+
+// ---- content subtab switching ----
+document.querySelectorAll('.subtab[data-sub]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.subtab[data-sub]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const target = btn.dataset.sub;
+    document.querySelectorAll('.subpanel').forEach(s=>s.classList.remove('active'));
+    document.getElementById('sub-'+target).classList.add('active');
+  });
+});
+
+// ---- longform ----
+const longformItems = [
+  {title:'Bitcoin’s Missing Risk-Free Rate', bucket:'B', status:'Gate-cleared, ready to publish', source:'CONT-BLOG-JUL2'},
+  {title:'TradFi Phrasebook', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Two Ways to Borrow', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Bridge Isn’t Custody', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Lending Blow-Ups', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Rate That Makes Margin Possible', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Reading the Tape', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Ecosystem Test', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Cross-Margining Explained', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Why Trustless Was Wrong', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
+];
+document.getElementById('longformBody').innerHTML = longformItems.map((it,idx)=>{
+  const id = 'lf-'+idx;
+  return `
+  <tr>
+    <td contenteditable="true" data-edit-id="${id}">${editedText(id, it.title)}</td>
+    <td><span class="badge ${bucketClass(it.bucket)}">${it.bucket}</span></td>
+    <td>${it.status}</td>
+    <td>${it.source}</td>
+    <td>${reviewCellHTML(id)}</td>
+  </tr>`;
+}).join('');
+
+// ---- polls ----
+const pollItems = [
+  {q:'What actually earns your trust with Bitcoin collateral?', pillar:'Pillar 3', opts:'A trusted brand name · Being able to verify it · No one party in control · I’d rather self-custody'},
+  {q:'Most "Bitcoin loans" cap what you can borrow below collateral value. That’s...', pillar:'Pillar 2', opts:'Smart, safety first · A missed opportunity · Fine, I don’t borrow · Never thought about it'},
+  {q:'Which piece of "real" finance is Bitcoin still missing?', pillar:'Pillar 4', opts:'A yield curve · Margin, not just loans · Transparent settlement · Nothing, it’s fine'},
+  {q:'Wrapped BTC or the real thing as collateral, which do you trust?', pillar:'Pillar 1', opts:'Wrapped is fine · Only native BTC · Depends on the platform · I don’t lever up'},
+  {q:'An app on someone else’s chain, or a chain built from scratch?', pillar:'Pillar 5', opts:'App on existing chain · Its own validators · Doesn’t matter to me · I look at what’s built on top'},
+  {q:'Which one are you right now?', pillar:'Segmentation', opts:'HODL only · Lend or borrow occasionally · Trade actively with leverage · Curious, haven’t tried'},
+];
+document.getElementById('pollsGrid').innerHTML = pollItems.map((p,idx)=>{
+  const id = 'pl-'+idx;
+  return `
+  <div class="card">
+    <h3 contenteditable="true" data-edit-id="${id}-q">${editedText(id+'-q', p.q)}</h3>
+    <span class="badge bg-b">${p.pillar}</span>
+    <p contenteditable="true" data-edit-id="${id}-opts" style="margin-top:8px;">${editedText(id+'-opts', p.opts)}</p>
+    ${reviewCellHTML(id)}
+  </div>`;
+}).join('');
+
+// ---- catalyst map ----
+const catalystItems = [
+  {phase:'Phase 1', name:'Trust-building content phase (~1 month)', status:'Confirmed', pillars:'1, 3, 4', beat:'Credible on fundamentals before it asks for anything.'},
+  {phase:'Phase 1', name:'Newsletter + blog, monthly', status:'Confirmed', pillars:'4, 2', beat:'Steady, owned-channel proof of rigor.'},
+  {phase:'Phase 1', name:'Discord to Circle migration completes', status:'Likely', pillars:'–', beat:'Community knows where home base is.'},
+  {phase:'Phase 1', name:'White paper v2 finalized', status:'Likely', pillars:'–', beat:'Internal credibility backbone.'},
+  {phase:'Phase 1', name:'Light paper release', status:'Likely', pillars:'1', beat:'The unlock is published, reviewable.'},
+  {phase:'Phase 1', name:'TLDR / explainer content', status:'Likely', pillars:'1 → 2', beat:'What the unlock means for you.'},
+  {phase:'Phase 1', name:'Partnership content (HoneyB, Bitfrost)', status:'Likely', pillars:'5', beat:'The rails are real, builders on them.'},
+  {phase:'Phase 1', name:'@Arch handle consolidation (PR moment)', status:'TBD', pillars:'–', beat:'Speculative, blocked on X’s rules.'},
+  {phase:'Phase 1', name:'KOL bench warming (continuous)', status:'Confirmed', pillars:'–', beat:'Warm relationships, ready to activate.'},
+  {phase:'Phase 1/2', name:'Announcing Arch Prime, what it means', status:'TBD', pillars:'2, 3', beat:'The reveal, sold as benefit, not label.'},
+  {phase:'Phase 2', name:'Arch Prime beta go-live', status:'TBD', pillars:'2, 3', beat:'Working, not just argued.'},
+  {phase:'Phase 2', name:'Beta community program stand-up', status:'TBD', pillars:'–', beat:'First real proof point.'},
+  {phase:'Phase 2', name:'KOLs convert to hands-on-product voices', status:'TBD', pillars:'–', beat:'Trusted voices show the product.'},
+  {phase:'Phase 3', name:'Mainnet', status:'TBD', pillars:'1–5', beat:'Arch is live, the biggest lever.'},
+  {phase:'Phase 3', name:'Official launch, with a trailer', status:'TBD', pillars:'1–5', beat:'The payoff for everything before it.'},
+  {phase:'Phase 3', name:'Points program', status:'TBD', pillars:'–', beat:'Early support gets recognized.'},
+  {phase:'Phase 3', name:'Coordinated KOL campaign', status:'TBD', pillars:'–', beat:'The warm bench converts.'},
+  {phase:'Phase 3', name:'Newsletter list as conversion channel', status:'TBD', pillars:'–', beat:'The owned list becomes the push.'},
+];
+function statusBadge(s){
+  const cls = s==='Confirmed' ? 'st-confirmed' : s==='Likely' ? 'st-likely' : 'st-tbd';
+  return `<span class="badge ${cls}">${s}</span>`;
+}
+document.getElementById('catalystBody').innerHTML = catalystItems.map((c,idx)=>{
+  const id = 'cat-'+idx;
+  return `
+  <tr>
+    <td>${c.phase}</td>
+    <td contenteditable="true" data-edit-id="${id}-name">${editedText(id+'-name', c.name)}</td>
+    <td>${statusBadge(c.status)}</td>
+    <td contenteditable="true" data-edit-id="${id}-beat">${editedText(id+'-beat', c.beat)}</td>
+    <td>${reviewCellHTML(id)}</td>
+  </tr>`;
+}).join('');
+wireReviewControls();
+
+// ---- pillars ----
+const pillarItems = [
+  {title:'Pillar 1, The Unlock', body:'Programs can now take decentralized, trusted ownership of physical Bitcoin UTXOs and clear/settle at the base layer. What earns the right to say "prime brokerage" at all.', angles:'The UTXO-ownership problem · wrapped vs. native · a validator set, not one balance sheet'},
+  {title:'Pillar 2, Real Leverage', body:'Most "Bitcoin credit" is over-collateralized lending, no real leverage. A margin account sees collateral and position together.', angles:'Hyperliquid-for-Bitcoin-margining · lending vs. margin explainer · benefit-forward, no invented numbers'},
+  {title:'Pillar 3, Transparent Collateral', body:'Last cycle’s blow-ups were market-structure failures, not Bitcoin failures. Credit works when collateral is verifiable.', angles:'Opaque-lending post-mortems · what "transparent" means operationally · own rails'},
+  {title:'Pillar 4, Market-Structure Literacy', body:'The sophisticated conversation about Bitcoin is about structure. Home for the repo-rate material as supporting evidence.', angles:'TradFi-to-Bitcoin vocabulary · repo/financing-rate as mechanism · live-event reads'},
+  {title:'Pillar 5, Own Rails', body:'Arch isn’t an app on someone else’s chain, its own VM, consensus, validator network.', angles:'"Ecosystem, not an app" · HoneyB as proof · lower cadence, KOL-adjacent'},
+];
+document.getElementById('pillarsGrid').innerHTML = pillarItems.map(p=>`
+  <div class="card"><h3>${p.title}</h3><p>${p.body}</p><div class="angles">${p.angles}</div></div>`).join('');
+
+// ---- buckets ----
+const bucketItemsFull = [
+  {title:'A, Bullish BTC / Macro', body:'General Bitcoin content, hardest-money framing, ETF flows, policy. Top-of-funnel authority.', note:'Runs close to real time, figures need a source check every time.'},
+  {title:'B, Arch Education', body:'Arch, its products, and the principles that make it work, the 5-pillar structure.', note:'Pillar 5 is close to tapped out until there’s a real partnership beat.'},
+  {title:'C, Campaigns & Partnerships', body:'Tied to real moments, not evergreen, not schedulable in advance.', note:'HoneyB + Bitfrost confirmed, no date yet. Needs Brand-Comms sign-off.'},
+];
+document.getElementById('bucketsGrid').innerHTML = bucketItemsFull.map(b=>`
+  <div class="card"><h3>${b.title}</h3><p>${b.body}</p><div class="angles">${b.note}</div></div>`).join('');
+
+// ---- urgent ----
+document.getElementById('urgentList').innerHTML = `
+  <div class="banner">Ticket <strong>GTM-CALLAGENDA-1</strong> (an agenda for an internal GTM/social call flagged as imminent) doesn’t show as delivered, worth a check that it didn’t get missed if that call already happened.</div>
+
+  <div class="urgent-group"><h4>Ready, just needs your click</h4>
+    <div class="u-item"><span class="u-dot green"></span><div><p class="u-title">Send the August Arch Archives (Issue 003) <span class="u-tag">NEWS-003</span></p><p class="u-desc">All three gates approved, DoD passed. Send-ready HTML at <code>newsletter/issues/2026-08-arch-archives.html</code>. Only action left: paste into beehiiv and hit Send.</p></div></div>
+    <div class="u-item"><span class="u-dot green"></span><div><p class="u-title">Publish the July blog, "Bitcoin’s Missing Risk-Free Rate" <span class="u-tag">CONT-BLOG-JUL2</span></p><p class="u-desc">Gate-cleared since 07-06, still sitting unpublished. Editor and Brand both approved. A light figure sanity-check on publish day is worth doing since it’s overdue.</p></div></div>
+  </div>
+
+  <div class="urgent-group"><h4>Blocking other work, needs a decision</h4>
+    <div class="u-item"><span class="u-dot red"></span><div><p class="u-title">Mainnet / beta-live window <span class="u-tag">gtm-catalyst-map</span></p><p class="u-desc">The single biggest lever in the whole GTM map. Until a real window is set, Phase 2 and 3 stay slots instead of a real sequence.</p></div></div>
+    <div class="u-item"><span class="u-dot red"></span><div><p class="u-title">8 role-migration decisions (Discord to Circle) <span class="u-tag">COMM-ROLEMECH</span></p><p class="u-desc">Tiers, benefits, and claim tooling proposed and ready, blocking Discord Post C and the Circle migration announcement. Needs Tree and Matt.</p></div></div>
+    <div class="u-item"><span class="u-dot amber"></span><div><p class="u-title">Approve the revised content pillars <span class="u-tag">content-pillars-v2</span></p><p class="u-desc">Still directional. Everything drafted this session builds on this set, worth locking so Content-Marketing isn’t building on sand.</p></div></div>
+    <div class="u-item"><span class="u-dot amber"></span><div><p class="u-title">Greenlight for Discord Post B (Introducing Arch Prime) <span class="u-tag">CONT-DISCORD-2</span></p><p class="u-desc">Drafted, on hold, needs Matt’s explicit public greenlight since Discord is more visible than the newsletter list.</p></div></div>
+  </div>
+
+  <div class="urgent-group"><h4>Waiting on your picks</h4>
+    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">4 batches of blog concepts, ~50 ideas total <span class="u-tag">CONT-BLOG-IDEAS-1–4</span></p><p class="u-desc">Evergreen, Arch-education, and prime-brokerage/macro concepts all delivered inline this session, nothing drafted past idea stage until picked.</p></div></div>
+    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">Circle roadmap decisions <span class="u-tag">COMM-001</span></p><p class="u-desc">API key, space-map approval, tags, pinned "What is Arch" post, LP/investor shareables, engagement cadence, all sitting in <code>memory/playbooks/circle-roadmap.md</code>.</p></div></div>
+    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">Tutorials and guides polish, execution items <span class="u-tag">CONT-GUIDES-1</span></p><p class="u-desc">5 missing banners, a Swap step-5 copy fix, video walkthroughs (needs Jonah looped in). Plan’s ready in <code>memory/playbooks/tutorials-guides-polish.md</code>.</p></div></div>
+  </div>
+
+  <div class="urgent-group"><h4>Small housekeeping</h4>
+    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">Fix cell D17 in the GTM Google Sheet</p><p class="u-desc">Got auto-parsed as a date mid-edit, should read "2, 3" not a serial number, on the "Double down: announcing Arch Prime" row.</p></div></div>
+    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">Check X’s rules on self-swapping premium handles</p><p class="u-desc">Action item from the 08-07 sync, needed before the @Arch / @ArchNetwork consolidation idea can even be evaluated as real.</p></div></div>
+    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">Schedule the dedicated X/content cadence call</p><p class="u-desc">Tree, Zack, Mohamed, separate from the broader GTM sync. Not yet on the calendar.</p></div></div>
+  </div>
+`;
+
+// ---- schedule / calendar ----
+const contentPool = [
+  ...items.map((i,idx)=>({ id:'sf-'+idx, type:'sf', typeLabel:'Shortform', bucket:i.bucket,
+    text: editedText('sf-'+idx, i.preview) })),
+  ...longformItems.map((it,idx)=>({ id:'lf-'+idx, type:'lf', typeLabel:'Longform', bucket:it.bucket,
+    text: editedText('lf-'+idx, it.title) })),
+  ...pollItems.map((p,idx)=>({ id:'pl-'+idx, type:'pl', typeLabel:'Poll', bucket:'B',
+    text: editedText('pl-'+idx+'-q', p.q) })),
+];
+
+function getSchedule(){
+  try{ return JSON.parse(lsGet('schedule', '{}')); }catch(e){ return {}; }
+}
+function setSchedule(sched){ lsSet('schedule', JSON.stringify(sched)); }
+
+function dateKey(y,m,d){
+  return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+
+let calDate = new Date();
+calDate.setDate(1);
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function renderCalendar(){
+  const y = calDate.getFullYear(), m = calDate.getMonth();
+  document.getElementById('calLabel').textContent = MONTH_NAMES[m] + ' ' + y;
+
+  const firstWeekday = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const today = new Date();
+  const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const sched = getSchedule();
+
+  let cells = '';
+  for(let i = 0; i < firstWeekday; i++){
+    cells += `<div class="cal-day pad"></div>`;
+  }
+  for(let d = 1; d <= daysInMonth; d++){
+    const key = dateKey(y, m, d);
+    const isToday = key === todayKey;
+    const dayItems = sched[key] || [];
+    const chips = dayItems.map(it => `
+      <div class="cal-chip type-${it.type}">
+        <span class="chip-label" title="${it.text.replace(/"/g,'&quot;')}">${it.text}</span>
+        <button data-remove-key="${key}" data-remove-id="${it.id}">&times;</button>
+      </div>`).join('');
+    cells += `
+      <div class="cal-day${isToday ? ' today' : ''}">
+        <div class="cal-daynum">
+          <span>${d}</span>
+          <button class="cal-add" data-add-key="${key}" title="Add content">+</button>
+        </div>
+        <div class="cal-chips">${chips}</div>
+      </div>`;
+  }
+  document.getElementById('calendarGrid').innerHTML = cells;
+
+  document.querySelectorAll('[data-add-key]').forEach(btn=>{
+    btn.onclick = () => openScheduleModal(btn.dataset.addKey);
+  });
+  document.querySelectorAll('[data-remove-key]').forEach(btn=>{
+    btn.onclick = () => {
+      const key = btn.dataset.removeKey, id = btn.dataset.removeId;
+      const s = getSchedule();
+      s[key] = (s[key] || []).filter(it => it.id !== id);
+      if(s[key].length === 0) delete s[key];
+      setSchedule(s);
+      renderCalendar();
+    };
+  });
+}
+
+let pendingDateKey = null;
+function openScheduleModal(key){
+  pendingDateKey = key;
+  const [y,m,d] = key.split('-').map(Number);
+  document.getElementById('modalDateLabel').textContent = 'Schedule for ' + MONTH_NAMES[m-1] + ' ' + d + ', ' + y;
+  document.getElementById('modalSearch').value = '';
+  renderModalList('');
+  document.getElementById('scheduleModal').style.display = 'flex';
+  document.getElementById('modalSearch').focus();
+}
+function closeScheduleModal(){
+  document.getElementById('scheduleModal').style.display = 'none';
+  pendingDateKey = null;
+}
+function renderModalList(q){
+  const query = q.toLowerCase();
+  const matches = contentPool.filter(c => c.text.toLowerCase().includes(query));
+  document.getElementById('modalList').innerHTML = matches.slice(0, 200).map(c => `
+    <div class="modal-item" data-pick-id="${c.id}">
+      <span class="badge ${bucketClass(c.bucket)}">${c.typeLabel}</span>
+      <span class="mi-text">${c.text}</span>
+    </div>`).join('') || '<p class="note" style="margin:10px 8px;">No matches.</p>';
+
+  document.querySelectorAll('[data-pick-id]').forEach(row=>{
+    row.onclick = () => {
+      if(!pendingDateKey) return;
+      const item = contentPool.find(c => c.id === row.dataset.pickId);
+      const s = getSchedule();
+      s[pendingDateKey] = s[pendingDateKey] || [];
+      if(!s[pendingDateKey].some(it => it.id === item.id)){
+        s[pendingDateKey].push({ id:item.id, type:item.type, text:item.text });
+      }
+      setSchedule(s);
+      closeScheduleModal();
+      renderCalendar();
+    };
+  });
+}
+
+document.getElementById('calPrev').addEventListener('click', ()=>{
+  calDate.setMonth(calDate.getMonth() - 1);
+  renderCalendar();
+});
+document.getElementById('calNext').addEventListener('click', ()=>{
+  calDate.setMonth(calDate.getMonth() + 1);
+  renderCalendar();
+});
+document.getElementById('calToday').addEventListener('click', ()=>{
+  calDate = new Date(); calDate.setDate(1);
+  renderCalendar();
+});
+document.getElementById('modalClose').addEventListener('click', closeScheduleModal);
+document.getElementById('scheduleModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'scheduleModal') closeScheduleModal();
+});
+document.getElementById('modalSearch').addEventListener('input', (e)=> renderModalList(e.target.value));
+
+renderCalendar();
+
+}
+boot();
+</script>
+
+</body>
+</html>

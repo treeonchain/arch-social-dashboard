@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Arch, Internal Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --orange:#EC641D; --gold:#FCC76E; --cream:#FBF9F3; --ink:#1f1d1a; --muted:#8a8672;
+    --line:#ece6d8; --red:#c0523d; --amber:#b8862f; --green:#4a7a5f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--cream);color:var(--ink);}
+  a{color:inherit;}
+  header{display:flex;align-items:center;gap:14px;padding:26px 48px 18px;}
+  header .mark{width:32px;height:32px;border-radius:8px;
+    background:linear-gradient(135deg,var(--orange),var(--gold));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;
+    font-size:14px;font-family:Georgia,serif;flex:0 0 auto;}
+  header a.home{font-size:12px;color:var(--muted);text-decoration:none;margin-left:auto;}
+  header a.home:hover{color:var(--orange);}
+  header h1{font-family:Georgia,serif;font-weight:400;font-size:19px;margin:0;letter-spacing:-0.2px;}
+
+  nav{display:flex;gap:2px;padding:0 48px;border-bottom:1px solid var(--line);overflow-x:auto;}
+  nav button{background:none;border:none;padding:12px 16px;font-size:13px;font-weight:500;
+    color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;
+    font-family:inherit;}
+  nav button.active{color:var(--ink);border-bottom-color:var(--orange);font-weight:600;}
+
+  main{max-width:920px;margin:0 auto;padding:40px 48px 90px;}
+  section{display:none;}
+  section.active{display:block;animation:fade .12s ease-in;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+
+  h2{font-family:Georgia,serif;font-weight:400;font-size:24px;margin:0 0 4px;letter-spacing:-.2px;}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 28px;}
+
+  /* Urgent list */
+  .urgent-group{margin-bottom:30px;}
+  .urgent-group h4{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+    margin:0 0 10px;font-weight:600;}
+  .u-item{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+  .u-item:last-child{border-bottom:none;}
+  .dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;margin-top:6px;}
+  .dot.red{background:var(--red);}
+  .dot.amber{background:var(--amber);}
+  .dot.green{background:var(--green);}
+  .dot.grey{background:#c9c3ae;}
+  .u-body{flex:1;}
+  .u-title{font-size:14.5px;font-weight:600;margin:0 0 3px;}
+  .u-desc{font-size:13px;color:#5a5645;line-height:1.5;margin:0;}
+  .u-tag{font-size:10.5px;color:var(--muted);font-family:ui-monospace,monospace;margin-left:8px;
+    font-weight:400;}
+
+  .banner{background:#fff;border:1px solid var(--line);border-left:3px solid var(--gold);
+    padding:12px 16px;border-radius:6px;font-size:13px;margin-bottom:24px;line-height:1.5;color:#5a5645;}
+
+  /* generic cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;}
+  .card h3{margin:0 0 8px;font-size:14.5px;font-weight:600;}
+  .card p{margin:0 0 8px;font-size:13px;line-height:1.55;color:#3a382f;}
+  .card .angles{font-size:12px;color:var(--muted);line-height:1.6;}
+
+  .tag{display:inline-block;padding:2px 8px;border-radius:9px;font-size:10.5px;font-weight:600;letter-spacing:.2px;}
+  .t-confirmed{background:#e7f2ea;color:var(--green);}
+  .t-likely{background:#faf1e0;color:var(--amber);}
+  .t-tbd{background:#f7e9e6;color:var(--red);}
+  .t-a{background:#e7edf7;color:#3a5a9c;}
+  .t-b{background:#efe9f7;color:#6a4a9c;}
+  .t-c{background:#f7e9f1;color:#9c4a76;}
+
+  /* sequence */
+  .seqStep{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line);}
+  .seqStep:last-child{border-bottom:none;}
+  .seqNum{flex:0 0 26px;height:26px;border-radius:50%;background:var(--ink);color:var(--gold);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;margin-top:2px;}
+  .seqBody h3{margin:0 0 4px;font-size:15px;font-weight:600;}
+  .seqBody p{margin:4px 0 0;font-size:13px;line-height:1.55;color:#5a5645;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;
+    color:var(--muted);border-bottom:1px solid var(--line);font-weight:600;}
+  td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5;}
+  tr:hover td{background:#fff;}
+
+  .linkline{margin-top:6px;font-size:13px;}
+  .linkline a{color:var(--orange);font-weight:600;text-decoration:none;}
+  .linkline a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="mark">A</div>
+  <h1>Arch, Internal Hub</h1>
+  <a class="home" href="index.html">← Home</a>
+</header>
+
+<nav>
+  <button class="tab active" data-t="urgent">Urgent</button>
+  <button class="tab" data-t="sequence">Launch Sequence</button>
+  <button class="tab" data-t="catalysts">Catalyst Map</button>
+  <button class="tab" data-t="pillars">Content Pillars</button>
+  <button class="tab" data-t="buckets">Content Buckets</button>
+  <button class="tab" data-t="polls">Polls</button>
+</nav>
+
+<main>
+
+<section id="urgent" class="active">
+  <h2>Urgent</h2>
+  <p class="sub">Pulled from TASK-QUEUE.md · 2026-08-11</p>
+
+  <div class="urgent-group">
+    <h4>Ready, just needs your click</h4>
+    <div class="u-item"><div class="dot green"></div><div class="u-body">
+      <p class="u-title">Send the August Arch Archives (Issue 003)<span class="u-tag">NEWS-003</span></p>
+      <p class="u-desc">All three gates approved, DoD passed. Send-ready HTML at <code>newsletter/issues/2026-08-arch-archives.html</code>. Only action left: paste into beehiiv and hit Send.</p>
+    </div></div>
+    <div class="u-item"><div class="dot green"></div><div class="u-body">
+      <p class="u-title">Publish the July blog, "Bitcoin's Missing Risk-Free Rate"<span class="u-tag">CONT-BLOG-JUL2</span></p>
+      <p class="u-desc">Gate-cleared since 07-06, still sitting unpublished. Editor + Brand both approved. A light figure sanity-check on publish day is worth doing since it's overdue.</p>
+    </div></div>
+  </div>
+
+  <div class="urgent-group">
+    <h4>Blocking other work, needs a decision</h4>
+    <div class="u-item"><div class="dot red"></div><div class="u-body">
+      <p class="u-title">Mainnet / beta-live window<span class="u-tag">gtm-catalyst-map</span></p>
+      <p class="u-desc">The single biggest lever in the whole GTM map. Until you give a real window, Phase 2 and 3 (beta proof, launch, points program) stay slots instead of a real sequence.</p>
+    </div></div>
+    <div class="u-item"><div class="dot red"></div><div class="u-body">
+      <p class="u-title">8 role-migration decisions (Discord → Circle)<span class="u-tag">COMM-ROLEMECH</span></p>
+      <p class="u-desc">Tiers, benefits, and claim tooling proposed and ready, blocking Discord Post C and the Circle migration announcement. Needs you + Matt.</p>
+    </div></div>
+    <div class="u-item"><div class="dot amber"></div><div class="u-body">
+      <p class="u-title">Approve the revised content pillars<span class="u-tag">content-pillars-v2</span></p>
+      <p class="u-desc">Still directional. Everything drafted this session builds on this set, worth locking so Content-Marketing isn't building on sand.</p>
+    </div></div>
+    <div class="u-item"><div class="dot amber"></div><div class="u-body">
+      <p class="u-title">Greenlight for Discord Post B (Introducing Arch Prime)<span class="u-tag">CONT-DISCORD-2</span></p>
+      <p class="u-desc">Drafted, on hold, needs Matt's explicit public greenlight since Discord is more visible than the newsletter list.</p>
+    </div></div>
+  </div>
+
+  <div class="urgent-group">
+    <h4>Waiting on your picks</h4>
+    <div class="u-item"><div class="dot grey"></div><div class="u-body">
+      <p class="u-title">4 batches of blog concepts, ~50 ideas total<span class="u-tag">CONT-BLOG-IDEAS-1–4</span></p>
+      <p class="u-desc">Evergreen, Arch-education, and prime-brokerage/macro concepts all delivered inline this session, nothing drafted past idea stage until you pick.</p>
+    </div></div>
+    <div class="u-item"><div class="dot grey"></div><div class="u-body">
+      <p class="u-title">Circle roadmap decisions<span class="u-tag">COMM-001</span></p>
+      <p class="u-desc">API key, space-map approval, tags, pinned "What is Arch" post, LP/investor shareables, engagement cadence, all sitting in <code>memory/playbooks/circle-roadmap.md</code>.</p>
+    </div></div>
+    <div class="u-item"><div class="dot grey"></div><div class="u-body">
+      <p class="u-title">Tutorials & guides polish, execution items<span class="u-tag">CONT-GUIDES-1</span></p>
+      <p class="u-desc">5 missing banners, a Swap step-5 copy fix, video walkthroughs (needs Jonah looped in). Plan's ready in <code>memory/playbooks/tutorials-guides-polish.md</code>.</p>
+    </div></div>
+  </div>
+
+  <div class="urgent-group">
+    <h4>Small housekeeping</h4>
+    <div class="u-item"><div class="dot grey"></div><div class="u-body">
+      <p class="u-title">Fix cell D17 in the GTM Google Sheet</p>
+      <p class="u-desc">Got auto-parsed as a date mid-edit, should read "2, 3" not a serial number, on the "Double down: announcing Arch Prime" row.</p>
+    </div></div>
+    <div class="u-item"><div class="dot grey"></div><div class="u-body">
+      <p class="u-title">Check X's rules on self-swapping premium handles</p>
+      <p class="u-desc">Your own action item from the 08-07 sync, needed before the @Arch / @ArchNetwork consolidation idea can even be evaluated as real.</p>
+    </div></div>
+    <div class="u-item"><div class="dot grey"></div><div class="u-body">
+      <p class="u-title">Schedule the dedicated X/content cadence call</p>
+      <p class="u-desc">You, Zack, Mohamed, separate from the broader GTM sync. Not yet on the calendar.</p>
+    </div></div>
+  </div>
+
+  <div class="banner">
+    ⚠️ One ticket in the queue (<strong>GTM-CALLAGENDA-1</strong>, an agenda for an internal GTM/social call you flagged as imminent) doesn't show as delivered, worth a check that it didn't get missed if that call already happened.
+  </div>
+</section>
+
+<section id="sequence">
+  <h2>Launch Sequence</h2>
+  <p class="sub">Locked 2026-08-10, order of operations, no hard dates</p>
+
+  <div class="seqStep"><div class="seqNum">1</div><div class="seqBody">
+    <h3>Warm up the account <span class="tag t-confirmed">Confirmed</span></h3>
+    <p>Already running, pull from the ~20 drafted pillar posts already in the bank.</p></div></div>
+  <div class="seqStep"><div class="seqNum">2</div><div class="seqBody">
+    <h3>Educational content with our thesis <span class="tag t-confirmed">Confirmed</span></h3>
+    <p>Runs concurrently with Step 1, same content bank, pillar-anchored.</p></div></div>
+  <div class="seqStep"><div class="seqNum">3</div><div class="seqBody">
+    <h3>Light paper release <span class="tag t-likely">Likely</span></h3>
+    <p>Publish event, not a post. Announcement copy is drafted and ready. Mohamed revising now.</p></div></div>
+  <div class="seqStep"><div class="seqNum">4</div><div class="seqBody">
+    <h3>TLDR of the thesis blog, on X <span class="tag t-likely">Likely</span></h3>
+    <p>Thread built off "Bitcoin's Missing Risk-Free Rate." Follows the light paper immediately.</p></div></div>
+  <div class="seqStep"><div class="seqNum">5</div><div class="seqBody">
+    <h3>Double down: announcing Arch Prime, what it means <span class="tag t-tbd">TBD</span></h3>
+    <p>Blocked on the Network-vs-Prime brand decision. 3-4 draft concepts ready, benefit-forward.</p></div></div>
+  <div class="seqStep"><div class="seqNum">6</div><div class="seqBody">
+    <h3>Official launch, with a trailer <span class="tag t-tbd">TBD</span></h3>
+    <p>Tied to the mainnet trigger. Trailer needs a Creative-Director brief once a date exists; launch-day copy is drafted.</p></div></div>
+  <div class="seqStep"><div class="seqNum">7</div><div class="seqBody">
+    <h3>Points program <span class="tag t-tbd">TBD</span></h3>
+    <p>Mechanics not decided, needs its own brief, same category as the Discord role-migration precedent. Teaser copy only for now.</p></div></div>
+
+  <p class="linkline"><a href="https://docs.google.com/spreadsheets/d/1eI4HepNCkuHzwvoXGeDy-aICKleK0Mh67pStoUqxQvI/edit" target="_blank">Open the editable working calendar →</a></p>
+</section>
+
+<section id="catalysts">
+  <h2>Catalyst Map</h2>
+  <p class="sub">Every marketing catalyst, order-of-operations, tagged by confidence</p>
+  <table>
+    <tr><th>Phase</th><th>Catalyst</th><th>Status</th><th>Pillars</th><th>Beat</th></tr>
+    <tr><td>Phase 1</td><td>Trust-building content phase (~1 month)</td><td><span class="tag t-confirmed">Confirmed</span></td><td>1, 3, 4</td><td>Credible on fundamentals before it asks for anything.</td></tr>
+    <tr><td>Phase 1</td><td>Newsletter + blog, monthly</td><td><span class="tag t-confirmed">Confirmed</span></td><td>4, 2</td><td>Steady, owned-channel proof of rigor.</td></tr>
+    <tr><td>Phase 1</td><td>Discord → Circle migration completes</td><td><span class="tag t-likely">Likely</span></td><td>, </td><td>Community knows where home base is.</td></tr>
+    <tr><td>Phase 1</td><td>White paper v2 finalized</td><td><span class="tag t-likely">Likely</span></td><td>, </td><td>Internal credibility backbone.</td></tr>
+    <tr><td>Phase 1</td><td>Light paper release</td><td><span class="tag t-likely">Likely</span></td><td>1</td><td>The unlock is published, reviewable.</td></tr>
+    <tr><td>Phase 1</td><td>TLDR / explainer content</td><td><span class="tag t-likely">Likely</span></td><td>1 → 2</td><td>What the unlock means for you.</td></tr>
+    <tr><td>Phase 1</td><td>Partnership content (HoneyB, Bitfrost)</td><td><span class="tag t-likely">Likely</span></td><td>5</td><td>The rails are real, builders on them.</td></tr>
+    <tr><td>Phase 1</td><td>@Arch handle consolidation (PR moment)</td><td><span class="tag t-tbd">TBD</span></td><td>, </td><td>Speculative, blocked on X's rules.</td></tr>
+    <tr><td>Phase 1</td><td>KOL bench warming (continuous)</td><td><span class="tag t-confirmed">Confirmed</span></td><td>, </td><td>Warm relationships, ready to activate.</td></tr>
+    <tr><td>Phase 1/2</td><td>Announcing Arch Prime, what it means</td><td><span class="tag t-tbd">TBD</span></td><td>2, 3</td><td>The reveal, sold as benefit, not label.</td></tr>
+    <tr><td>Phase 2</td><td>Arch Prime beta go-live</td><td><span class="tag t-tbd">TBD</span></td><td>2, 3</td><td>Working, not just argued.</td></tr>
+    <tr><td>Phase 2</td><td>Beta community program stand-up</td><td><span class="tag t-tbd">TBD</span></td><td>, </td><td>First real proof point.</td></tr>
+    <tr><td>Phase 2</td><td>KOLs convert to hands-on-product voices</td><td><span class="tag t-tbd">TBD</span></td><td>, </td><td>Trusted voices show the product.</td></tr>
+    <tr><td>Phase 3</td><td>Mainnet</td><td><span class="tag t-tbd">TBD</span></td><td>1–5</td><td>Arch is live, the biggest lever.</td></tr>
+    <tr><td>Phase 3</td><td>Official launch, with a trailer</td><td><span class="tag t-tbd">TBD</span></td><td>1–5</td><td>The payoff for everything before it.</td></tr>
+    <tr><td>Phase 3</td><td>Points program</td><td><span class="tag t-tbd">TBD</span></td><td>, </td><td>Early support gets recognized.</td></tr>
+    <tr><td>Phase 3</td><td>Coordinated KOL campaign</td><td><span class="tag t-tbd">TBD</span></td><td>, </td><td>The warm bench converts.</td></tr>
+    <tr><td>Phase 3</td><td>Newsletter list as conversion channel</td><td><span class="tag t-tbd">TBD</span></td><td>, </td><td>The owned list becomes the push.</td></tr>
+  </table>
+</section>
+
+<section id="pillars">
+  <h2>Content Pillars</h2>
+  <p class="sub">1 earns the right → 2 sells the benefit → 3 handles trust → 4 teaches vocabulary → 5 differentiates</p>
+  <div class="grid">
+    <div class="card"><h3>Pillar 1, The Unlock</h3>
+      <p>Programs can now take decentralized, trusted ownership of physical Bitcoin UTXOs and clear/settle at the base layer. What earns the right to say "prime brokerage" at all.</p>
+      <div class="angles">The UTXO-ownership problem · wrapped vs. native · a validator set, not one balance sheet</div></div>
+    <div class="card"><h3>Pillar 2, Real Leverage</h3>
+      <p>Most "Bitcoin credit" is over-collateralized lending, no real leverage. A margin account sees collateral and position together.</p>
+      <div class="angles">Hyperliquid-for-Bitcoin-margining · lending vs. margin explainer · benefit-forward, no invented numbers</div></div>
+    <div class="card"><h3>Pillar 3, Transparent Collateral</h3>
+      <p>Last cycle's blow-ups were market-structure failures, not Bitcoin failures. Credit works when collateral is verifiable.</p>
+      <div class="angles">Opaque-lending post-mortems · what "transparent" means operationally · own rails</div></div>
+    <div class="card"><h3>Pillar 4, Market-Structure Literacy</h3>
+      <p>The sophisticated conversation about Bitcoin is about structure. Home for the repo-rate material as supporting evidence.</p>
+      <div class="angles">TradFi-to-Bitcoin vocabulary · repo/financing-rate as mechanism · live-event reads</div></div>
+    <div class="card"><h3>Pillar 5, Own Rails</h3>
+      <p>Arch isn't an app on someone else's chain, its own VM, consensus, validator network.</p>
+      <div class="angles">"Ecosystem, not an app" · HoneyB as proof · lower cadence, KOL-adjacent</div></div>
+  </div>
+</section>
+
+<section id="buckets">
+  <h2>Content Buckets</h2>
+  <p class="sub">The 3 directions, sits above the pillars as the top-level taxonomy</p>
+  <div class="grid">
+    <div class="card"><h3><span class="tag t-a">A</span> Bullish BTC / Macro</h3>
+      <p>General Bitcoin content, hardest-money framing, ETF flows, policy. Top-of-funnel authority.</p>
+      <div class="angles">Runs close to real time, figures need a source check every time.</div></div>
+    <div class="card"><h3><span class="tag t-b">B</span> Arch Education</h3>
+      <p>Arch, its products, and the principles that make it work, the 5-pillar structure.</p>
+      <div class="angles">Pillar 5 is close to tapped out until there's a real partnership beat.</div></div>
+    <div class="card"><h3><span class="tag t-c">C</span> Campaigns & Partnerships</h3>
+      <p>Tied to real moments, not evergreen, not schedulable in advance.</p>
+      <div class="angles">HoneyB + Bitfrost confirmed, no date yet. Needs Brand-Comms sign-off.</div></div>
+  </div>
+</section>
+
+<section id="polls">
+  <h2>Poll Concepts</h2>
+  <p class="sub">Genuinely diagnostic, no obvious "correct" answer</p>
+  <div class="grid">
+    <div class="card"><h3>What actually earns your trust with Bitcoin collateral?</h3>
+      <span class="tag t-b">Pillar 3</span>
+      <p style="margin-top:8px;">A trusted brand name · Being able to verify it · No one party in control · I'd rather self-custody</p></div>
+    <div class="card"><h3>Most "Bitcoin loans" cap what you can borrow below collateral value. That's...</h3>
+      <span class="tag t-b">Pillar 2</span>
+      <p style="margin-top:8px;">Smart, safety first · A missed opportunity · Fine, I don't borrow · Never thought about it</p></div>
+    <div class="card"><h3>Which piece of "real" finance is Bitcoin still missing?</h3>
+      <span class="tag t-b">Pillar 4</span>
+      <p style="margin-top:8px;">A yield curve · Margin, not just loans · Transparent settlement · Nothing, it's fine</p></div>
+    <div class="card"><h3>Wrapped BTC or the real thing as collateral, which do you trust?</h3>
+      <span class="tag t-b">Pillar 1</span>
+      <p style="margin-top:8px;">Wrapped is fine · Only native BTC · Depends on the platform · I don't lever up</p></div>
+    <div class="card"><h3>An app on someone else's chain, or a chain built from scratch?</h3>
+      <span class="tag t-b">Pillar 5</span>
+      <p style="margin-top:8px;">App on existing chain · Its own validators · Doesn't matter to me · I look at what's built on top</p></div>
+    <div class="card"><h3>Which one are you right now?</h3>
+      <span class="tag t-c">Segmentation</span>
+      <p style="margin-top:8px;">HODL only · Lend or borrow occasionally · Trade actively with leverage · Curious, haven't tried</p></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+  function activate(id){
+    document.querySelectorAll('nav .tab').forEach(b=>b.classList.toggle('active', b.dataset.t===id));
+    document.querySelectorAll('main section').forEach(s=>s.classList.toggle('active', s.id===id));
+  }
+  document.querySelectorAll('nav .tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      activate(btn.dataset.t);
+      history.replaceState(null,'','#'+btn.dataset.t);
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+  });
+  const initial = (location.hash || '#urgent').slice(1);
+  if(document.getElementById(initial)) activate(initial);
+</script>
+
+</body>
+</html>
