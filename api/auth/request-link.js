@@ -42,20 +42,30 @@ export default async function handler(req, res) {
 
   if (!process.env.RESEND_API_KEY) {
     console.warn('RESEND_API_KEY not set, cannot send magic link email. Link:', link);
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, debug: 'no_api_key' });
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
-  await resend.emails.send({
-    from: process.env.MAGIC_LINK_FROM || 'Arch Dashboard <onboarding@resend.dev>',
-    to: email,
-    subject: 'Sign in to the Arch dashboard',
-    html: `
-      <p>Click below to sign in to the Arch content dashboard.</p>
-      <p><a href="${link}">Sign in</a></p>
-      <p style="color:#8a8672;font-size:12px;">This link expires in 15 minutes and works once. If you didn't request it, ignore this email.</p>
-    `,
-  });
+  try {
+    const result = await resend.emails.send({
+      from: process.env.MAGIC_LINK_FROM || 'Arch Dashboard <onboarding@resend.dev>',
+      to: email,
+      subject: 'Sign in to the Arch dashboard',
+      html: `
+        <p>Click below to sign in to the Arch content dashboard.</p>
+        <p><a href="${link}">Sign in</a></p>
+        <p style="color:#8a8672;font-size:12px;">This link expires in 15 minutes and works once. If you didn't request it, ignore this email.</p>
+      `,
+    });
+    console.log('Resend send result:', JSON.stringify(result));
+    if (result?.error) {
+      console.error('Resend returned an error:', JSON.stringify(result.error));
+      return res.status(200).json({ ok: true, debug: 'resend_error', detail: result.error });
+    }
+  } catch (err) {
+    console.error('Resend send threw:', err?.message || err);
+    return res.status(200).json({ ok: true, debug: 'resend_threw', detail: err?.message });
+  }
 
-  return res.status(200).json({ ok: true });
+  return res.status(200).json({ ok: true, debug: 'sent' });
 }
