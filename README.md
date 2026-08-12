@@ -9,9 +9,14 @@ serverless functions, no framework, deploys straight to Vercel.
 - `api/state.js` — shared state (edits, approvals, feedback, the schedule),
   stored in Vercel KV so everyone who signs in sees the same data.
 - `api/auth/*` — magic-link email sign-in.
+- `api/admin-content.js` — a separate write path, protected by a static key
+  instead of a browser session, for publishing drafted content (new posts,
+  polls, articles, deep dives) straight to the live dashboard with no code
+  push. This is how Claude adds content between deploys.
 - `middleware.js` — gates `/`, `/index.html`, `/hub.html`, `/dashboard.html`,
-  and `/api/state` behind a signed-in session. `/login.html` and
-  `/api/auth/*` stay open (or nothing can sign in).
+  and `/api/state` behind a signed-in session. `/login.html`, `/api/auth/*`,
+  and `/api/admin-content` stay open to that flow (or nothing can sign in,
+  or content could never be published from outside a browser).
 - `config/allowlist.js` — who's allowed to sign in. Anyone `@arch.network` is
   auto-allowed. Add anyone else to the `emails` array in that file.
 
@@ -57,12 +62,21 @@ there's no merge conflict on first push.)
   run `openssl rand -hex 32` locally and paste the output). This signs the
   sign-in cookie, keep it secret, don't commit it.
 
-### 6. Redeploy
-Once KV is connected and the three env vars (`RESEND_API_KEY`,
-`MAGIC_LINK_FROM`, `SESSION_SECRET`) are set, trigger a redeploy (Vercel
-does this automatically when you save env vars, or push an empty commit).
+### 6. Set the admin key (lets Claude publish content without a deploy)
+- In Vercel env vars, add `ADMIN_API_KEY` = another long random string
+  (`openssl rand -hex 32` again, a different value than the session secret).
+- Share this value with Claude in a Cowork session (paste it in chat, or
+  store it somewhere Claude can read, never commit it to the repo). Claude
+  uses it to call `POST /api/admin-content` and publish drafted content
+  directly to the live site.
 
-### 7. Try it
+### 7. Redeploy
+Once KV is connected and the four env vars (`RESEND_API_KEY`,
+`MAGIC_LINK_FROM`, `SESSION_SECRET`, `ADMIN_API_KEY`) are set, trigger a
+redeploy (Vercel does this automatically when you save env vars, or push an
+empty commit).
+
+### 8. Try it
 - Visit your Vercel URL, you should land on `/login.html`.
 - Enter an `@arch.network` address (or one you added to
   `config/allowlist.js`), check your inbox, click the link.
@@ -74,6 +88,46 @@ does this automatically when you save env vars, or push an empty commit).
 Edit `emails` in `config/allowlist.js`, commit, push. Vercel redeploys
 automatically and the new person can request a sign-in link within a
 minute or two.
+
+## How content gets published without a deploy
+Everything on the dashboard is one of two things:
+
+- **The seed content**, the posts/polls/articles/deep dives baked into
+  `dashboard.html` when it was last deployed. Changing these requires
+  editing the file and pushing, same as any other code change.
+- **Custom content**, anything added after that, whether through the
+  dashboard's own "+ New..." buttons or through `POST /api/admin-content`.
+  This lives in Vercel KV and shows up live for everyone signed in, no
+  deploy involved.
+
+When Claude drafts a new batch of content in a session, it calls
+`/api/admin-content` directly instead of editing the file, so it appears on
+the live dashboard within seconds. Example request:
+
+```
+curl -X POST https://your-deployment.vercel.app/api/admin-content \
+  -H "x-admin-key: YOUR_ADMIN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "sf",
+    "items": [
+      { "bucket": "B", "pillar": "Pillar 2", "format": "Single", "status": "Draft", "preview": "Example post copy here." }
+    ]
+  }'
+```
+
+`type` is one of `sf` (shortform), `md` (deep dive), `lf` (blog/article), or
+`pl` (poll). `items` matches the shape of entries already in the
+corresponding array in `dashboard.html`, so Claude can see the schema by
+reading the file. A `GET` to the same endpoint (with the same header)
+returns a count of what's currently in each bucket, useful for a sanity
+check after publishing.
+
+Periodically, once a batch of custom content has been reviewed and
+approved, it's worth folding the good ones into the seed arrays in
+`dashboard.html` directly and pushing, so the "default" state of the site
+reflects what's actually been kept, and the custom buckets don't grow
+indefinitely. Not required, just tidier.
 
 ## Local development
 `vercel dev` (after `npm install` and `vercel link`) runs this locally with

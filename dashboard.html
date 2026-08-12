@@ -8,14 +8,17 @@
 <style>
   :root{
     --navy:#1A1A2E; --card-navy:#252540; --border-navy:#3E3A8E;
-    --orange:#EC641D; --gold:#FCC76E; --cream:#F3EFD7; --warmwhite:#FFFAF6;
-    --purple-deep:#3E3A8E; --purple-light:#736FB9;
-    --text:#2D2D2D; --muted:#8a8672; --line:#e9e2cf;
+    --orange:#EC641D; --gold:#FCC76E; --cream:#F6F1E3; --warmwhite:#FFFCF8;
+    --purple-deep:#3E3A8E; --purple-light:#736FB9; --green:#4a7a5f; --red:#b8492f;
+    --text:#2D2D2D; --heading:#1A1A2E; --muted:#8a8672; --muted-2:#b3ac96; --line:#ece5d3;
     --sidebar-w:230px; --sidebar-w-collapsed:72px;
+    --radius:14px; --radius-sm:9px;
+    --shadow-sm:0 1px 2px rgba(26,26,46,.05);
+    --shadow-md:0 2px 6px rgba(26,26,46,.05), 0 10px 28px rgba(26,26,46,.06);
   }
   *{box-sizing:border-box;}
   body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
-    background:var(--cream);color:var(--text);}
+    background:var(--cream);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;}
 
   /* ===== Sidebar ===== */
   #sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--navy);
@@ -55,56 +58,109 @@
   #app.collapsed{margin-left:var(--sidebar-w-collapsed);}
 
   header.topbar{display:flex;align-items:center;justify-content:space-between;
-    padding:24px 40px;border-bottom:1px solid var(--line);background:var(--warmwhite);}
-  header.topbar h1{font-family:Georgia,serif;font-weight:400;font-size:22px;margin:0;letter-spacing:-.2px;}
+    padding:26px 48px;border-bottom:1px solid var(--line);background:var(--warmwhite);}
+  header.topbar h1{font-family:Georgia,serif;font-weight:400;font-size:25px;margin:0;
+    letter-spacing:-.3px;color:var(--heading);}
   header.topbar p{margin:3px 0 0;font-size:12.5px;color:var(--muted);}
   .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--gold));
-    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;}
-  .topbar-right{display:flex;align-items:center;gap:12px;}
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;
+    box-shadow:var(--shadow-sm);}
+  .topbar-right{display:flex;align-items:center;gap:16px;}
   .user-email{font-size:12px;color:var(--muted);}
-  .logout-link{font-size:12px;color:var(--muted);text-decoration:underline;}
-  .logout-link:hover{color:var(--orange);}
+  .logout-link{font-size:12px;color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line);
+    padding-bottom:1px;transition:color .12s,border-color .12s;}
+  .logout-link:hover{color:var(--orange);border-color:var(--orange);}
 
-  main{padding:32px 40px 70px;}
+  main{padding:40px 48px 80px;max-width:1440px;}
+
+  .page-title{font-family:Georgia,serif;font-weight:400;font-size:19px;margin:0 0 4px;
+    color:var(--heading);letter-spacing:-.2px;}
+  .page-sub{margin:0 0 22px;font-size:12.5px;color:var(--muted);}
+  .section-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+    font-weight:700;margin:0 0 4px;}
+  .thesis-block{background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px 26px;box-shadow:var(--shadow-sm);margin-bottom:30px;}
+  .thesis-block p{margin:0 0 14px;font-size:13.5px;line-height:1.7;color:#3a382f;}
+  .thesis-block p:last-child{margin-bottom:0;}
+  .thesis-block strong{color:var(--heading);}
 
   /* metric cards */
-  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
-  .metric{background:var(--navy);border-radius:12px;padding:20px 22px;color:#fff;position:relative;overflow:hidden;}
-  .metric::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;
-    background:linear-gradient(to right,var(--orange),var(--gold));}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:32px;}
+  .metric{background:var(--navy);border-radius:var(--radius);padding:22px 24px;color:#fff;
+    position:relative;overflow:hidden;box-shadow:var(--shadow-md);}
+  .metric::before{content:"";position:absolute;top:0;right:0;width:120px;height:120px;
+    background:radial-gradient(circle at top right, rgba(255,255,255,.06), transparent 70%);}
+  .metric::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,var(--orange));}
   .metric .m-label{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--purple-light);
-    font-weight:600;margin-bottom:10px;}
-  .metric .m-value{font-size:30px;font-weight:700;color:var(--orange);font-family:Georgia,serif;}
+    font-weight:600;margin-bottom:12px;position:relative;}
+  .metric .m-value{font-size:32px;font-weight:700;color:var(--accent,var(--orange));font-family:Georgia,serif;
+    position:relative;line-height:1;}
   .metric .m-value.gold{color:var(--gold);}
   .metric .m-value.white{color:#fff;}
-  .metric .m-sub{font-size:11.5px;color:#a9a7c4;margin-top:6px;}
+  .metric .m-sub{font-size:11.5px;color:#a9a7c4;margin-top:8px;position:relative;}
+  .metric:nth-child(1){--accent:var(--orange);}
+  .metric:nth-child(2){--accent:var(--gold);}
+  .metric:nth-child(3){--accent:var(--purple-light);}
+  .metric:nth-child(4){--accent:#e8896a;}
+
+  /* dashboard home: review + schedule preview rows */
+  .dash-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+  .nr-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);}
+  .nr-item:last-child{border-bottom:none;padding-bottom:0;}
+  .nr-item:first-child{padding-top:0;}
+  .nr-dot{flex:0 0 7px;width:7px;height:7px;border-radius:50%;}
+  .nr-dot.pending{background:var(--muted-2);} .nr-dot.rejected{background:var(--red);}
+  .nr-text{flex:1;min-width:0;}
+  .nr-title{font-size:12.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;margin:0 0 2px;}
+  .nr-meta{font-size:10.5px;color:var(--muted);}
+  .nr-go{flex:0 0 auto;background:var(--warmwhite);border:1px solid var(--line);border-radius:16px;
+    padding:5px 12px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;
+    transition:all .12s;}
+  .nr-go:hover{border-color:var(--orange);color:var(--orange);}
+  .empty-state{font-size:12.5px;color:var(--muted);padding:8px 0;line-height:1.6;}
+
+  .cu-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);}
+  .cu-item:last-child{border-bottom:none;padding-bottom:0;}
+  .cu-item:first-child{padding-top:0;}
+  .cu-date{flex:0 0 64px;font-size:11px;font-weight:700;color:var(--heading);
+    background:var(--warmwhite);border:1px solid var(--line);border-radius:8px;padding:6px 4px;text-align:center;
+    line-height:1.3;}
+  .cu-date .cu-day{font-size:15px;display:block;}
+  .cu-text{flex:1;min-width:0;font-size:12.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;}
 
   /* charts row */
-  .charts{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:28px;}
-  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px;}
-  .panel h2{margin:0 0 2px;font-size:15px;font-weight:600;}
-  .panel .p-sub{margin:0 0 16px;font-size:12px;color:var(--muted);}
+  .charts{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-bottom:32px;}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px;
+    box-shadow:var(--shadow-sm);}
+  .panel h2{margin:0 0 3px;font-size:15px;font-weight:600;color:var(--heading);}
+  .panel .p-sub{margin:0 0 18px;font-size:12px;color:var(--muted);}
   .chart-wrap{position:relative;height:220px;}
 
   /* table panel */
-  .table-panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;}
-  .table-head{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid var(--line);
+  .table-panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    box-shadow:var(--shadow-sm);}
+  .table-head{display:flex;align-items:center;gap:12px;padding:22px 26px;border-bottom:1px solid var(--line);
     flex-wrap:wrap;}
-  .table-head h2{margin:0;font-size:15px;font-weight:600;flex:0 0 auto;margin-right:auto;}
-  .filter-btn{border:1px solid var(--line);background:var(--warmwhite);border-radius:20px;padding:6px 14px;
-    font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;}
-  .filter-btn.active{background:var(--orange);color:#fff;border-color:var(--orange);}
-  #search{border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:12.5px;
-    font-family:inherit;width:190px;}
+  .table-head h2{margin:0;font-size:15.5px;font-weight:600;color:var(--heading);flex:0 0 auto;margin-right:auto;}
+  .filter-btn{border:1px solid var(--line);background:var(--warmwhite);border-radius:20px;padding:6px 15px;
+    font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .12s;}
+  .filter-btn:hover{border-color:var(--orange);color:var(--orange);}
+  .filter-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+  #search{border:1px solid var(--line);border-radius:8px;padding:8px 13px;font-size:12.5px;
+    font-family:inherit;width:200px;background:var(--warmwhite);}
+  #search:focus{outline:none;border-color:var(--orange);background:#fff;}
 
   table{width:100%;border-collapse:collapse;font-size:12.5px;}
-  th{text-align:left;padding:11px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;
-    color:var(--muted);border-bottom:1px solid var(--line);font-weight:600;cursor:pointer;user-select:none;
+  th{text-align:left;padding:12px 16px;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;
+    color:var(--muted);border-bottom:1px solid var(--line);font-weight:700;cursor:pointer;user-select:none;
     background:var(--warmwhite);}
   th:hover{color:var(--orange);}
-  td{padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5;}
-  tbody tr:hover td{background:#fdfbf5;}
-  .badge{display:inline-block;padding:2px 9px;border-radius:9px;font-size:10.5px;font-weight:700;letter-spacing:.2px;}
+  td{padding:15px 16px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.55;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover td{background:#fdfaf2;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;letter-spacing:.2px;}
   .bg-a{background:#e7edf7;color:#3a5a9c;}
   .bg-b{background:#efe9f7;color:#6a4a9c;}
   .bg-c{background:#f7e9f1;color:#9c4a76;}
@@ -114,83 +170,116 @@
   .st-confirmed{background:#e7f2ea;color:#4a7a5f;}
   .st-likely{background:#faf1e0;color:#b8862f;}
   .st-tbd{background:#f7e6e2;color:#b8492f;}
+  .stage-review{background:#eef0fa;color:#4a4f9c;}
+  .stage-drafting{background:#e7edf7;color:#3a5a9c;}
+  .stage-pill{cursor:pointer;user-select:none;transition:filter .12s;}
+  .stage-pill:hover{filter:brightness(.96);}
   .preview{color:#4a4636;max-width:420px;}
+  .preview-lg{color:#4a4636;max-width:520px;line-height:1.7;}
+  .preview-cell{max-width:420px;}
+  .img-idea{margin-top:8px;font-size:11px;color:#b8862f;background:#faf1e0;border-radius:6px;
+    padding:6px 9px;line-height:1.5;}
+  .cell-input{border:1px solid var(--line);border-radius:7px;padding:6px 9px;font-size:12px;
+    font-family:inherit;width:100%;min-width:110px;background:var(--warmwhite);color:var(--text);}
+  .cell-input:focus{outline:none;border-color:var(--orange);background:#fff;}
+  .add-btn{background:var(--orange);color:#fff;border:none;border-radius:20px;padding:8px 16px;
+    font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .12s;}
+  .add-btn:hover{background:#d8551a;}
+
+  .status-filter{display:flex;gap:2px;background:var(--warmwhite);border:1px solid var(--line);
+    border-radius:20px;padding:3px;margin-left:auto;}
+  .status-filter-btn{border:none;background:none;border-radius:16px;padding:5px 12px;font-size:11px;
+    font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .12s;}
+  .status-filter-btn:hover{color:var(--heading);}
+  .status-filter-btn.active{background:var(--navy);color:#fff;}
 
   .sec{display:none;}
-  .sec.active{display:block;animation:fadeIn .12s ease-in;}
-  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .sec.active{display:block;animation:fadeIn .15s ease-in;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(2px);}to{opacity:1;transform:translateY(0);}}
 
-  .subtabs{display:flex;gap:4px;margin-bottom:18px;background:#fff;border:1px solid var(--line);
-    border-radius:10px;padding:4px;width:fit-content;}
-  .subtab{background:none;border:none;padding:8px 18px;border-radius:7px;font-size:12.5px;
-    font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .subtabs{display:flex;gap:4px;margin-bottom:20px;background:#fff;border:1px solid var(--line);
+    border-radius:11px;padding:4px;width:fit-content;box-shadow:var(--shadow-sm);}
+  .subtab{background:none;border:none;padding:8px 20px;border-radius:8px;font-size:12.5px;
+    font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .12s;}
+  .subtab:hover{color:var(--heading);}
   .subtab.active{background:var(--navy);color:#fff;}
   .subpanel{display:none;}
   .subpanel.active{display:block;}
-  .note{font-size:12px;color:var(--muted);line-height:1.6;margin:14px 4px 0;max-width:640px;}
+  .note{font-size:12px;color:var(--muted);line-height:1.7;margin:16px 4px 0;max-width:640px;}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
-  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
-  .card h3{margin:0 0 8px;font-size:14.5px;font-weight:600;}
-  .card p{margin:0 0 8px;font-size:13px;line-height:1.55;color:#3a382f;}
-  .card .angles{font-size:12px;color:var(--muted);line-height:1.6;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;
+    box-shadow:var(--shadow-sm);transition:box-shadow .15s,transform .15s;}
+  .card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+  .card h3{margin:0 0 9px;font-size:14.5px;font-weight:600;color:var(--heading);}
+  .card p{margin:0 0 9px;font-size:13px;line-height:1.6;color:#3a382f;}
+  .card .angles{font-size:12px;color:var(--muted);line-height:1.7;}
 
-  .urgent-group{margin-bottom:26px;}
+  .urgent-group{background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 24px;box-shadow:var(--shadow-sm);margin-bottom:16px;}
   .urgent-group h4{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
-    margin:0 0 10px;font-weight:600;}
-  .u-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
-  .u-item:last-child{border-bottom:none;}
+    margin:0 0 12px;font-weight:700;}
+  .u-item{display:flex;gap:13px;padding:13px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+  .u-item:last-child{border-bottom:none;padding-bottom:2px;}
+  .u-item:first-child{padding-top:2px;}
   .u-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;margin-top:6px;}
-  .u-dot.red{background:#c0523d;} .u-dot.amber{background:#b8862f;}
-  .u-dot.green{background:#4a7a5f;} .u-dot.grey{background:#c9c3ae;}
-  .u-title{font-size:14px;font-weight:600;margin:0 0 3px;}
-  .u-desc{font-size:12.5px;color:#5a5645;line-height:1.5;margin:0;}
+  .u-dot.red{background:var(--red);} .u-dot.amber{background:#b8862f;}
+  .u-dot.green{background:var(--green);} .u-dot.grey{background:var(--muted-2);}
+  .u-title{font-size:14px;font-weight:600;margin:0 0 3px;color:var(--heading);}
+  .u-desc{font-size:12.5px;color:#5a5645;line-height:1.6;margin:0;}
   .u-tag{font-size:10px;color:var(--muted);font-family:ui-monospace,monospace;margin-left:8px;font-weight:400;}
-  .banner{background:#fdf3e0;border:1px solid #e8d4a0;color:#7a5a1f;border-radius:10px;
-    padding:12px 16px;font-size:12.5px;line-height:1.5;margin-bottom:20px;}
+  .banner{background:#fdf3e0;border:1px solid #eddcae;color:#7a5a1f;border-radius:var(--radius-sm);
+    padding:13px 18px;font-size:12.5px;line-height:1.6;margin-bottom:22px;}
 
   /* ===== review: editable copy, approval, feedback ===== */
-  [contenteditable="true"]{outline:none;border-radius:4px;}
+  [contenteditable="true"]{outline:none;border-radius:5px;transition:background .1s;}
   [contenteditable="true"]:hover{background:#fdf8ec;cursor:text;}
   [contenteditable="true"]:focus{background:#fffaea;box-shadow:0 0 0 2px var(--gold) inset;}
   .review-cell{min-width:150px;}
-  .status-pill{display:inline-block;cursor:pointer;padding:3px 10px;border-radius:12px;font-size:10.5px;
-    font-weight:700;letter-spacing:.2px;border:1px solid transparent;user-select:none;white-space:nowrap;}
+  .status-pill{display:inline-block;cursor:pointer;padding:4px 11px;border-radius:20px;font-size:10.5px;
+    font-weight:600;letter-spacing:.2px;border:1px solid transparent;user-select:none;white-space:nowrap;
+    transition:filter .12s;}
+  .status-pill:hover{filter:brightness(.96);}
   .status-pill.pending{background:#f0ede4;color:#8a8672;}
   .status-pill.approved{background:#e7f2ea;color:#4a7a5f;}
   .status-pill.rejected{background:#f7e6e2;color:#b8492f;}
   .fb-toggle{display:block;background:none;border:none;color:var(--orange);font-size:11px;cursor:pointer;
-    text-decoration:underline;padding:0;margin-top:5px;font-family:inherit;}
-  .fb-box{width:100%;margin-top:6px;font-size:12px;font-family:inherit;border:1px solid var(--line);
-    border-radius:6px;padding:6px 8px;resize:vertical;min-height:44px;background:#fffaf0;}
-  .card .review-cell{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+    text-decoration:none;border-bottom:1px dotted var(--orange);padding:0;margin-top:6px;font-family:inherit;
+    width:fit-content;}
+  .fb-box{width:100%;margin-top:7px;font-size:12px;font-family:inherit;border:1px solid var(--line);
+    border-radius:8px;padding:7px 9px;resize:vertical;min-height:46px;background:#fffaf0;}
+  .fb-box:focus{outline:none;border-color:var(--gold);}
+  .card .review-cell{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
 
   /* ===== schedule / calendar ===== */
-  .cal-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-  .cal-head h2{margin:0;font-size:16px;font-weight:600;min-width:170px;}
+  .cal-head{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+  .cal-head h2{margin:0;font-size:17px;font-weight:600;min-width:170px;color:var(--heading);
+    font-family:Georgia,serif;font-weight:400;}
   .cal-nav{background:var(--warmwhite);border:1px solid var(--line);border-radius:8px;width:30px;height:30px;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);}
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);transition:all .12s;}
   .cal-nav:hover{border-color:var(--orange);color:var(--orange);}
   .cal-today{margin-left:auto;background:var(--warmwhite);border:1px solid var(--line);border-radius:20px;
-    padding:6px 14px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;}
+    padding:7px 15px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;
+    transition:all .12s;}
   .cal-today:hover{border-color:var(--orange);color:var(--orange);}
-  .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:6px;}
+  .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:8px;}
   .cal-weekdays div{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
-    font-weight:600;text-align:center;padding:4px 0;}
+    font-weight:700;text-align:center;padding:4px 0;}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
-  .cal-day{min-height:104px;border:1px solid var(--line);border-radius:10px;padding:8px;
-    background:var(--warmwhite);display:flex;flex-direction:column;gap:5px;}
+  .cal-day{min-height:110px;border:1px solid var(--line);border-radius:11px;padding:9px;
+    background:var(--warmwhite);display:flex;flex-direction:column;gap:6px;transition:border-color .12s;}
+  .cal-day:not(.pad):hover{border-color:#ddd3b8;}
   .cal-day.pad{background:transparent;border-color:transparent;}
-  .cal-day.today{border-color:var(--orange);background:#fff7ee;}
+  .cal-day.today{border-color:var(--orange);background:#fff7ee;box-shadow:0 0 0 1px var(--orange) inset;}
   .cal-daynum{display:flex;align-items:center;justify-content:space-between;font-size:12px;
     font-weight:700;color:var(--muted);}
   .cal-day.today .cal-daynum{color:var(--orange);}
-  .cal-add{background:none;border:1px dashed var(--line);border-radius:6px;color:var(--muted);
+  .cal-add{background:none;border:1px dashed var(--muted-2);border-radius:6px;color:var(--muted);
     cursor:pointer;font-size:13px;line-height:1;width:20px;height:20px;display:flex;align-items:center;
-    justify-content:center;font-family:inherit;}
-  .cal-add:hover{border-color:var(--orange);color:var(--orange);}
+    justify-content:center;font-family:inherit;transition:all .12s;}
+  .cal-add:hover{border-color:var(--orange);border-style:solid;color:var(--orange);}
   .cal-chips{display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
-  .cal-chip{display:flex;align-items:center;gap:5px;font-size:10.5px;padding:3px 6px;border-radius:6px;
+  .cal-chip{display:flex;align-items:center;gap:5px;font-size:10.5px;padding:4px 7px;border-radius:7px;
     line-height:1.3;}
   .cal-chip span.chip-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .cal-chip button{background:none;border:none;color:inherit;opacity:.55;cursor:pointer;font-size:11px;
@@ -216,6 +305,28 @@
   .modal-item .badge{flex:0 0 auto;}
   .modal-item .mi-text{font-size:12.5px;color:#3a382f;overflow:hidden;text-overflow:ellipsis;
     white-space:nowrap;}
+
+  .add-form{padding:0 20px 20px;display:flex;flex-direction:column;gap:14px;}
+  .add-field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;
+    color:var(--muted);font-weight:700;margin-bottom:6px;}
+  .add-field input, .add-field select, .add-field textarea{width:100%;border:1px solid var(--line);
+    border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;background:var(--warmwhite);}
+  .add-field input:focus, .add-field select:focus, .add-field textarea:focus{outline:none;
+    border-color:var(--orange);background:#fff;}
+  .add-field textarea{resize:vertical;min-height:80px;}
+  .add-row{display:flex;gap:12px;}
+  .add-row .add-field{flex:1;}
+  .add-submit{background:var(--navy);color:#fff;border:none;border-radius:8px;padding:11px 14px;
+    font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .12s;}
+  .add-submit:hover{background:var(--orange);}
+
+  /* ===== approved / archived pool lists ===== */
+  .pool-item{display:flex;gap:20px;align-items:flex-start;background:#fff;border:1px solid var(--line);
+    border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
+  .pool-main{flex:1;min-width:0;}
+  .pool-text{margin:8px 0 0;font-size:13px;line-height:1.6;color:#3a382f;}
+  .pool-side{flex:0 0 200px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;}
+  .pool-side .nr-go{align-self:flex-start;}
 </style>
 </head>
 <body>
@@ -247,10 +358,8 @@
     <button class="sb-item active" data-section="dashboard"><span class="dot"></span><span class="label">Dashboard</span></button>
     <button class="sb-item" data-section="content"><span class="dot"></span><span class="label">Content</span></button>
     <button class="sb-item" data-section="schedule"><span class="dot"></span><span class="label">Schedule</span></button>
-    <button class="sb-item" data-section="catalysts"><span class="dot"></span><span class="label">Catalyst map</span></button>
-    <button class="sb-item" data-section="pillars"><span class="dot"></span><span class="label">Pillars</span></button>
-    <button class="sb-item" data-section="buckets"><span class="dot"></span><span class="label">Buckets</span></button>
-    <button class="sb-item" data-section="urgent"><span class="dot"></span><span class="label">Urgent</span></button>
+    <button class="sb-item" data-section="catalysts"><span class="dot"></span><span class="label">GTM Catalysts</span></button>
+    <button class="sb-item" data-section="narrative"><span class="dot"></span><span class="label">Narrative</span></button>
   </nav>
 
   <div class="sb-bottom">Arch internal tool<br>Not for external use</div>
@@ -272,15 +381,29 @@
 
     <section id="sec-dashboard" class="sec active">
       <div class="metrics" id="metrics"></div>
+
+      <div class="dash-row">
+        <div class="panel">
+          <h2>Needs your review</h2>
+          <p class="p-sub">Content still pending or flagged, jump straight to it</p>
+          <div id="needsReview"></div>
+        </div>
+        <div class="panel">
+          <h2>Coming up</h2>
+          <p class="p-sub">Next scheduled content</p>
+          <div id="comingUp"></div>
+        </div>
+      </div>
+
       <div class="charts">
         <div class="panel">
           <h2>Content by bucket</h2>
-          <p class="p-sub">39 drafted items across the three content directions</p>
+          <p class="p-sub" id="bucketChartSub"></p>
           <div class="chart-wrap"><canvas id="bucketChart"></canvas></div>
         </div>
         <div class="panel">
-          <h2>Catalyst status</h2>
-          <p class="p-sub">18 GTM catalysts, by confidence</p>
+          <h2>Review status</h2>
+          <p class="p-sub">Across every drafted item, shortform, deep dives, blog, polls, and catalysts</p>
           <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
         </div>
       </div>
@@ -288,9 +411,10 @@
 
     <section id="sec-content" class="sec">
       <div class="subtabs">
-        <button class="subtab active" data-sub="shortform">Shortform</button>
-        <button class="subtab" data-sub="longform">Longform</button>
-        <button class="subtab" data-sub="polls">Polls</button>
+        <button class="subtab active" data-sub="shortform">Shortform, X</button>
+        <button class="subtab" data-sub="medium">Deep dives, X</button>
+        <button class="subtab" data-sub="longform">Blog / Articles</button>
+        <button class="subtab" data-sub="polls">Polls, X</button>
       </div>
 
       <div id="sub-shortform" class="subpanel active">
@@ -302,6 +426,13 @@
             <button class="filter-btn" data-f="B">Education</button>
             <button class="filter-btn" data-f="C">Campaigns</button>
             <input id="search" type="text" placeholder="Search copy...">
+            <div class="status-filter" data-type="sf">
+              <button class="status-filter-btn active" data-status="active">Active</button>
+              <button class="status-filter-btn" data-status="pending">Pending</button>
+              <button class="status-filter-btn" data-status="approved">Approved</button>
+              <button class="status-filter-btn" data-status="archived">Archived</button>
+            </div>
+            <button class="add-btn" id="addSfBtn">+ New post</button>
           </div>
           <table>
             <thead>
@@ -319,18 +450,65 @@
         </div>
       </div>
 
+      <div id="sub-medium" class="subpanel">
+        <div class="table-panel">
+          <div class="table-head">
+            <h2>Deep dives, medium-length X posts</h2>
+            <div class="status-filter" data-type="md">
+              <button class="status-filter-btn active" data-status="active">Active</button>
+              <button class="status-filter-btn" data-status="pending">Pending</button>
+              <button class="status-filter-btn" data-status="approved">Approved</button>
+              <button class="status-filter-btn" data-status="archived">Archived</button>
+            </div>
+            <button class="add-btn" id="addMdBtn">+ New deep dive</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th data-k="bucket">Bucket</th>
+                <th data-k="pillar">Pillar</th>
+                <th data-k="preview">Preview</th>
+                <th data-k="status">Status</th>
+                <th>Review</th>
+              </tr>
+            </thead>
+            <tbody id="mediumBody"></tbody>
+          </table>
+        </div>
+        <p class="note">Longer than a single post, shorter than a blog. Smart, not gatekept, every term gets defined in plain language the first time it shows up so a knowledgeable retail holder can follow the whole thing without a TradFi background. Anchored to the 5 content pillars, drafted straight from the narrative and thesis page.</p>
+      </div>
+
       <div id="sub-longform" class="subpanel">
         <div class="table-panel">
-          <div class="table-head"><h2>Longform, blog and light paper</h2></div>
+          <div class="table-head">
+            <h2>Blog / Articles, arch.network</h2>
+            <div class="status-filter" data-type="lf">
+              <button class="status-filter-btn active" data-status="active">Active</button>
+              <button class="status-filter-btn" data-status="pending">Pending</button>
+              <button class="status-filter-btn" data-status="approved">Approved</button>
+              <button class="status-filter-btn" data-status="archived">Archived</button>
+            </div>
+            <button class="add-btn" id="addLfBtn">+ New article</button>
+          </div>
           <table>
-            <thead><tr><th>Title</th><th>Bucket</th><th>Status</th><th>Source</th><th>Review</th></tr></thead>
+            <thead><tr><th>Title</th><th>Bucket</th><th>Stage</th><th>Target date</th><th>Link</th><th>Review</th></tr></thead>
             <tbody id="longformBody"></tbody>
           </table>
         </div>
-        <p class="note">Four idea batches (about 50 concepts total) are logged in TASK-QUEUE.md, evergreen, Arch-education, and prime-broker/macro lanes, awaiting picks. The nine titles above are the confirmed evergreen batch, everything else is summarized there rather than repeated here to avoid restating unverified specifics.</p>
+        <p class="note">Click a stage badge to move it forward, Idea, Drafting, In review, Ready to publish, Published. Campaign and evergreen batches from Tree are loaded in below. A few older idea batches (about 50 more concepts) are also logged in TASK-QUEUE.md, add the ones you're ready to commit to with "+ New article."</p>
       </div>
 
       <div id="sub-polls" class="subpanel">
+        <div class="table-head" style="margin-bottom:16px;background:none;border:none;padding:0;">
+          <h2 style="margin-right:auto;">Poll concepts, X</h2>
+          <div class="status-filter" data-type="pl">
+            <button class="status-filter-btn active" data-status="active">Active</button>
+            <button class="status-filter-btn" data-status="pending">Pending</button>
+            <button class="status-filter-btn" data-status="approved">Approved</button>
+            <button class="status-filter-btn" data-status="archived">Archived</button>
+          </div>
+          <button class="add-btn" id="addPlBtn">+ New poll</button>
+        </div>
         <div class="grid" id="pollsGrid"></div>
       </div>
     </section>
@@ -365,9 +543,20 @@
       </div>
     </div>
 
+    <div class="modal-overlay" id="addModal" style="display:none;">
+      <div class="modal-box">
+        <div class="modal-head">
+          <h3 id="addModalTitle">Add content</h3>
+          <button class="modal-close" id="addModalClose">&times;</button>
+        </div>
+        <form class="add-form" id="addForm"></form>
+      </div>
+    </div>
+
     <section id="sec-catalysts" class="sec">
+      <h2 class="page-title">GTM Catalysts</h2>
+      <p class="page-sub">Every marketing catalyst, order of operations, tagged by confidence.</p>
       <div class="table-panel">
-        <div class="table-head"><h2>GTM catalyst map</h2></div>
         <table>
           <thead><tr><th>Phase</th><th>Catalyst</th><th>Status</th><th>Beat</th><th>Review</th></tr></thead>
           <tbody id="catalystBody"></tbody>
@@ -375,19 +564,23 @@
       </div>
     </section>
 
-    <section id="sec-pillars" class="sec">
-      <div class="grid" id="pillarsGrid"></div>
-    </section>
+    <section id="sec-narrative" class="sec">
+      <h2 class="page-title">Narrative and thesis</h2>
+      <p class="page-sub">What Arch is, why now, and the content structure it drives.</p>
 
-    <section id="sec-buckets" class="sec">
-      <div class="grid" id="bucketsGrid"></div>
-    </section>
-
-    <section id="sec-urgent" class="sec">
-      <div class="table-panel" style="padding:24px;">
-        <h2 style="margin:0 0 14px;">Urgent</h2>
-        <div id="urgentList"></div>
+      <div class="thesis-block">
+        <p><strong>Positioning.</strong> Arch is shifting its lead framing from "capital markets infrastructure for Bitcoin" to <strong>Bitcoin-native Prime Brokerage</strong>. Audiences already have a mental model for what a prime broker does, venture circles especially, where "capital markets infrastructure" has no existing hook.</p>
+        <p><strong>Two-layer architecture.</strong> The foundational layer is the unlock: programs can take decentralized, trusted ownership of physical Bitcoin UTXOs and settle at the base layer, programmable collateral as the primitive. The application layer is the GTM story: Arch Prime, the Bitcoin-native prime brokerage built on that unlock. The two layers are never presented apart, infra credibility earns the right to make prime-brokerage claims, prime brokerage is what makes the infra matter.</p>
+        <p><strong>Audience vs. market.</strong> The target user is the self-custodial, non-KYC Bitcoin holder, Arch's moat is giving that user institutional-grade services. The target market and credibility bar are institutional, that describes the rigor, not who's meant to actually use the product.</p>
       </div>
+
+      <h3 class="section-label">The 5 content pillars</h3>
+      <p class="page-sub" style="margin-bottom:16px;">1 earns the right, 2 sells the benefit, 3 handles trust, 4 teaches vocabulary, 5 differentiates.</p>
+      <div class="grid" id="pillarsGrid"></div>
+
+      <h3 class="section-label" style="margin-top:30px;">The 3 content buckets</h3>
+      <p class="page-sub" style="margin-bottom:16px;">Sits above the pillars as the top-level taxonomy, every piece of content is one of these three first.</p>
+      <div class="grid" id="bucketsGrid"></div>
     </section>
 
   </main>
@@ -400,8 +593,6 @@ let __saveTimer = null;
 let __currentUserEmail = null;
 
 async function loadRemoteState(){
-  // Seed from this browser's local cache first (works offline / opened as a
-  // plain file), then let the shared server state overwrite it if reachable.
   try{
     for(let i=0;i<localStorage.length;i++){
       const k = localStorage.key(i);
@@ -454,7 +645,7 @@ if(document.getElementById('userEmail') && __currentUserEmail){
   document.getElementById('userEmail').textContent = __currentUserEmail;
 }
 
-const items = [
+let items = [
   {bucket:"B",pillar:"Pillar 1",format:"Single",status:"Draft",preview:"Programs can't own Bitcoin, not really. They can watch, wrap, or bridge a UTXO, none of that is the same as holding it the way a person can."},
   {bucket:"B",pillar:"Pillar 1",format:"Single",status:"Draft",preview:"Been explaining this to people all week: every Bitcoin lending product works because a company holds your BTC and tells you it's fine, not because a program can verify it."},
   {bucket:"B",pillar:"Pillar 2",format:"Single",status:"Draft",preview:"Hyperliquid proved perps didn't need a middleman between you and your position. We're doing the same thing to Bitcoin margin. Not lending. Margin."},
@@ -494,58 +685,18 @@ const items = [
   {bucket:"C",pillar:"Pillar 5",format:"Template",status:"Template",preview:"Why we partnered with X, a longer-form explainer on structural rationale over hype. Needs Brand-Comms sign-off before drafting."},
   {bucket:"C",pillar:"Pillar 5",format:"Template",status:"Template",preview:"Co-marketing quote-post, paired posting timed with the partner's own account. Format only, no partner named yet."},
   {bucket:"C",pillar:"Pillar 5",format:"Template",status:"Template",preview:"Ecosystem spotlight, builders on Arch, lower stakes and could run before a formal announcement if the partner is comfortable."},
+  {bucket:"B",pillar:"Pillar 1",format:"Single",status:"Draft",preview:"A UTXO sitting in a multisig you can't inspect isn't that different from one sitting in a bank vault. The label changes. The trust model doesn't.",image:"Side-by-side diagram: a bank vault and a multisig box, both drawn with a padlock and a question mark over what's actually inside. Visual point: same trust gap, different label."},
+  {bucket:"B",pillar:"Pillar 2",format:"Single",status:"Draft",preview:"Ask anyone offering you a 'Bitcoin loan' one question: can you see my position, or just my deposit? Most can't. That's the whole difference between a loan and a margin account.",image:"Two-column comparison graphic, 'Lending' vs 'Margin', each showing what the venue can actually see (a lock icon over 'position' on the lending side, an open eye icon on the margin side)."},
+  {bucket:"B",pillar:"Pillar 3",format:"Single",status:"Draft",preview:"Every post-mortem from the last lending cycle reads the same. Insert platform name, insert 'we're investigating,' insert users finding out the collateral was gone months earlier. The fix was never a better brand. It was making the collateral checkable."},
+  {bucket:"B",pillar:"Pillar 4",format:"Single",status:"Draft",preview:"Haircut. Margin call. Cross-margining. Bitcoin credit doesn't have a vocabulary problem, it has a market-structure problem. The vocabulary just hasn't had anywhere to live yet."},
+  {bucket:"B",pillar:"Pillar 5",format:"Single",status:"Draft",preview:"We could have shipped faster on someone else's chain. We'd also be running someone else's validator assumptions underneath a credit product. Slower and ours beats fast and borrowed.",image:"Simple stack diagram comparing 'App on someone else's chain' (a small block sitting on a large unlabeled base) vs 'Own VM, own validators' (a single tower, fully labeled top to bottom)."},
+  {bucket:"B",pillar:"Pillar 1/2",format:"Single",status:"Draft",preview:"Prime brokerage for Bitcoin isn't a rebrand. It's what becomes possible once a program can verifiably own a UTXO instead of just watching one."},
+  {bucket:"B",pillar:"Pillar 2",format:"Thread",status:"Draft",preview:"Thread: the difference between a loan and margin, with numbers you can actually picture.<br><br>1/ Put up $100 of BTC as collateral. A lending protocol might let you borrow $60. It never sees what you do with it, so it prices conservatively.<br><br>2/ A margin account sees your $100 of collateral AND your open position together. Because it has more information, it can extend more credit, priced against what you're actually exposed to, not just what you deposited.<br><br>3/ That's not 'more risk.' It's less blind underwriting.",image:"Simple bar-chart graphic: '$100 collateral -> $60 loan' on one side, '$100 collateral + visible position -> more credit extended' on the other, labeled clearly, no invented numbers beyond this illustrative example."},
+  {bucket:"B",pillar:"Pillar 1",format:"Single",status:"Draft",preview:"Programmable collateral is a confusing phrase until you drop the first word. It's about collateral. Bitcoin, the actual asset, under rules a program can verify instead of a company you have to trust."},
+  {bucket:"B",pillar:"Pillar 3",format:"Single",status:"Draft",preview:"Custody is who's holding the asset. Control is who can move it. A lot of 'secure' Bitcoin products only ever solved the first one.",image:"Two-icon graphic: a locked box labeled 'Custody' next to a hand on a lever labeled 'Control', visually separated to show they're not the same thing."},
+  {bucket:"B",pillar:"Pillar 4",format:"Thread",status:"Draft",preview:"Thread: why Bitcoin doesn't have a risk-free rate yet, and why that's the whole ballgame.<br><br>1/ Every mature market prices things against a baseline rate. Treasuries do it for dollars. Bitcoin has nothing equivalent.<br><br>2/ Not because it's impossible, because the market structure that produces one, real credit markets with priced counterparty risk, hasn't existed for Bitcoin yet.<br><br>3/ A risk-free rate doesn't get declared. It emerges once enough real, priced credit activity exists. That's the actual goalpost.",image:"A normal yield-curve line graphic for treasuries next to a blank axis with a large question mark where Bitcoin's equivalent curve would sit. Makes the 'missing piece' visual instead of abstract."},
 ];
-
-// ---- metrics ----
-const counts = {A:0,B:0,C:0};
-items.forEach(i=>counts[i.bucket]++);
-const metrics = [
-  {label:"Total content drafted",value:items.length,cls:"white",sub:items.length+" items across all buckets"},
-  {label:"Launch sequence",value:"2 / 7",cls:"gold",sub:"steps active now"},
-  {label:"Open catalysts",value:"18",cls:"white",sub:"3 confirmed, 5 likely, 10 TBD"},
-  {label:"Needs your attention",value:"13",cls:"gold",sub:"decisions, picks, and housekeeping"},
-];
-document.getElementById('metrics').innerHTML = metrics.map(m=>`
-  <div class="metric">
-    <div class="m-label">${m.label}</div>
-    <div class="m-value ${m.cls}">${m.value}</div>
-    <div class="m-sub">${m.sub}</div>
-  </div>`).join('');
-
-// ---- charts ----
-new Chart(document.getElementById('bucketChart'), {
-  type: 'bar',
-  data: {
-    labels: ['Bullish BTC / Macro', 'Arch Education', 'Campaigns & Partnerships'],
-    datasets: [{
-      data: [counts.A, counts.B, counts.C],
-      backgroundColor: ['#736FB9', '#EC641D', '#FCC76E'],
-      borderRadius: 6,
-      barThickness: 46,
-    }]
-  },
-  options: {
-    responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{display:false} },
-    scales:{ y:{ beginAtZero:true, grid:{color:'#f0ead9'} }, x:{ grid:{display:false} } }
-  }
-});
-
-new Chart(document.getElementById('statusChart'), {
-  type: 'doughnut',
-  data: {
-    labels: ['Confirmed', 'Likely', 'TBD'],
-    datasets: [{
-      data: [3, 5, 10],
-      backgroundColor: ['#4a7a5f', '#b8862f', '#c0523d'],
-      borderWidth: 0,
-    }]
-  },
-  options: {
-    responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11} } } }
-  }
-});
+try{ items = items.concat(JSON.parse(lsGet('custom_sf', '[]'))); }catch(e){}
 
 // ---- review: editable copy, approval status, feedback (persisted locally per browser) ----
 
@@ -575,6 +726,7 @@ function wireReviewControls(){
       lsSet('status_'+id, next);
       el.className = 'status-pill '+next;
       el.textContent = next==='approved' ? 'Approved' : next==='rejected' ? 'Needs changes' : 'Pending review';
+      if(typeof refreshAllViews === 'function') refreshAllViews();
     };
   });
   document.querySelectorAll('[data-fb-toggle]').forEach(btn=>{
@@ -604,6 +756,33 @@ function wireReviewControls(){
 let activeFilter = 'all';
 let sortKey = null, sortDir = 1;
 
+// ---- per-type review-status filter (Active / Pending / Approved / Archived) ----
+const statusFilters = { sf:'active', md:'active', lf:'active', pl:'active' };
+function passesStatusFilter(type, id){
+  const s = statusOf(id);
+  const f = statusFilters[type];
+  if(f==='pending') return s==='pending';
+  if(f==='approved') return s==='approved';
+  if(f==='archived') return s==='rejected';
+  return s !== 'rejected'; // 'active' default: everything except archived
+}
+function wireStatusFilters(){
+  document.querySelectorAll('.status-filter').forEach(group=>{
+    const type = group.dataset.type;
+    group.querySelectorAll('.status-filter-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        group.querySelectorAll('.status-filter-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        statusFilters[type] = btn.dataset.status;
+        if(type==='sf') render();
+        if(type==='md') renderMedium();
+        if(type==='lf') renderLongform();
+        if(type==='pl') renderPolls();
+      };
+    });
+  });
+}
+
 function statusClass(s){
   if(s==='Idea') return 'st-idea';
   if(s==='Draft') return 'st-draft';
@@ -619,7 +798,8 @@ function bucketLabel(b){
 function render(){
   const q = document.getElementById('search').value.toLowerCase();
   let rows = items.filter(i => (activeFilter==='all' || i.bucket===activeFilter)
-    && i.preview.toLowerCase().includes(q));
+    && i.preview.toLowerCase().includes(q)
+    && passesStatusFilter('sf', 'sf-'+items.indexOf(i)));
   if(sortKey){
     rows = rows.slice().sort((a,b)=>{
       const av=a[sortKey], bv=b[sortKey];
@@ -633,7 +813,10 @@ function render(){
       <td><span class="badge ${bucketClass(i.bucket)}">${bucketLabel(i.bucket)}</span></td>
       <td>${i.pillar}</td>
       <td>${i.format}</td>
-      <td class="preview" contenteditable="true" data-edit-id="${id}">${editedText(id, i.preview)}</td>
+      <td class="preview-cell">
+        <div class="preview" contenteditable="true" data-edit-id="${id}">${editedText(id, i.preview)}</div>
+        ${i.image ? `<div class="img-idea">Image idea: ${i.image}</div>` : ''}
+      </td>
       <td><span class="badge ${statusClass(i.status)}">${i.status}</span></td>
       <td>${reviewCellHTML(id)}</td>
     </tr>`;
@@ -692,50 +875,161 @@ document.querySelectorAll('.subtab[data-sub]').forEach(btn=>{
   });
 });
 
-// ---- longform ----
-const longformItems = [
-  {title:'Bitcoin’s Missing Risk-Free Rate', bucket:'B', status:'Gate-cleared, ready to publish', source:'CONT-BLOG-JUL2'},
-  {title:'TradFi Phrasebook', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
-  {title:'Two Ways to Borrow', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
-  {title:'Bridge Isn’t Custody', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
-  {title:'Lending Blow-Ups', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
-  {title:'Rate That Makes Margin Possible', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
-  {title:'Reading the Tape', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
-  {title:'Ecosystem Test', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
-  {title:'Cross-Margining Explained', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
-  {title:'Why Trustless Was Wrong', bucket:'B', status:'Idea, evergreen', source:'CONT-BLOG-IDEAS-2'},
+// ---- blog / articles ----
+let longformItems = [
+  {title:'Bitcoin’s Missing Risk-Free Rate', bucket:'B', stage:'Ready to publish', source:'CONT-BLOG-JUL2'},
+  {title:'TradFi Phrasebook', bucket:'B', stage:'Idea', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Two Ways to Borrow', bucket:'B', stage:'Idea', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Bridge Isn’t Custody', bucket:'B', stage:'Idea', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Lending Blow-Ups', bucket:'B', stage:'Idea', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Rate That Makes Margin Possible', bucket:'B', stage:'Idea', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Reading the Tape', bucket:'B', stage:'Idea', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Ecosystem Test', bucket:'B', stage:'Idea', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Cross-Margining Explained', bucket:'B', stage:'Idea', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Why Trustless Was Wrong', bucket:'B', stage:'Idea', source:'CONT-BLOG-IDEAS-2'},
+  {title:'Intro to Arch Prime and Our Core Primitives', bucket:'B', stage:'Idea', source:'Campaign batch'},
+  {title:'Light Paper Release Companion', bucket:'B', stage:'Idea', source:'Campaign batch'},
+  {title:'TLDR / Thesis Explainer', bucket:'B', stage:'Idea', source:'Campaign batch, follows the lite paper'},
+  {title:'Arch Prime Beta Go-Live', bucket:'C', stage:'Idea', source:'Campaign batch'},
+  {title:'HoneyB Partnership Piece', bucket:'C', stage:'Idea', source:'Campaign batch'},
+  {title:'Anchorage Partnership Piece', bucket:'C', stage:'Idea', source:'Campaign batch'},
+  {title:'Why Program-Enforced Custody Matters', bucket:'B', stage:'Idea', source:'Campaign batch'},
+  {title:'Enforcing Counterparty Risk: DeFi Lending vs. Programmatic Settlement', bucket:'B', stage:'Idea', source:'Campaign batch'},
+  {title:'Why There Is No BTC Yield, and How We Fix It', bucket:'B', stage:'Idea', source:'Campaign batch'},
+  {title:'BTC as Pristine, Tier-1 Capital in DeFi', bucket:'B', stage:'Idea', source:'Campaign batch'},
+  {title:'Why Building Your Own Vertical Stack Is Better', bucket:'B', stage:'Idea', source:'Evergreen batch, ref x.com/lmrankhan/status/2081812530826002455'},
+  {title:'How Settlement and Clearing Work on Arch', bucket:'B', stage:'Idea', source:'Evergreen batch'},
+  {title:'How Arch’s Chain Actually Works, Conceptually', bucket:'B', stage:'Idea', source:'Evergreen batch'},
+  {title:'The Risks of WETH in Times of Volatility', bucket:'B', stage:'Idea', source:'Evergreen batch'},
+  {title:'Bridge vs. Programmable Collateral, a Comparison', bucket:'B', stage:'Idea', source:'Evergreen batch'},
+  {title:'Building on Arch?', bucket:'B', stage:'Idea', source:'Evergreen batch'},
+  {title:'Why Less Than 1% of BTC Is Productive, and How We Fix That', bucket:'B', stage:'Idea', source:'Evergreen batch'},
 ];
-document.getElementById('longformBody').innerHTML = longformItems.map((it,idx)=>{
-  const id = 'lf-'+idx;
-  return `
-  <tr>
-    <td contenteditable="true" data-edit-id="${id}">${editedText(id, it.title)}</td>
-    <td><span class="badge ${bucketClass(it.bucket)}">${it.bucket}</span></td>
-    <td>${it.status}</td>
-    <td>${it.source}</td>
-    <td>${reviewCellHTML(id)}</td>
-  </tr>`;
-}).join('');
+try{ longformItems = longformItems.concat(JSON.parse(lsGet('custom_lf', '[]'))); }catch(e){}
+
+const STAGES = ['Idea','Drafting','In review','Ready to publish','Published'];
+function stageClass(s){
+  if(s==='Published') return 'st-confirmed';
+  if(s==='Ready to publish') return 'st-likely';
+  if(s==='In review') return 'stage-review';
+  if(s==='Drafting') return 'stage-drafting';
+  return 'st-template';
+}
+
+function renderLongform(){
+  const visible = longformItems
+    .map((it,idx)=>({ it, id:'lf-'+idx }))
+    .filter(x => passesStatusFilter('lf', x.id));
+  document.getElementById('longformBody').innerHTML = visible.map(({it,id})=>{
+    const stage = lsGet('stage_'+id, it.stage || 'Idea');
+    const date = lsGet('date_'+id, it.targetDate || '');
+    const link = lsGet('link_'+id, it.link || '');
+    return `
+    <tr>
+      <td contenteditable="true" data-edit-id="${id}">${editedText(id, it.title)}</td>
+      <td><span class="badge ${bucketClass(it.bucket)}">${it.bucket}</span></td>
+      <td><span class="badge ${stageClass(stage)} stage-pill" data-stage-id="${id}">${stage}</span></td>
+      <td><input type="date" class="cell-input" data-date-id="${id}" value="${date}"></td>
+      <td><input type="url" class="cell-input" data-link-id="${id}" placeholder="Link once live" value="${link.replace(/"/g,'&quot;')}"></td>
+      <td>${reviewCellHTML(id)}</td>
+    </tr>`;
+  }).join('');
+  wireReviewControls();
+  wireBlogControls();
+}
+function wireBlogControls(){
+  document.querySelectorAll('[data-stage-id]').forEach(el=>{
+    el.onclick = ()=>{
+      const id = el.dataset.stageId;
+      const cur = lsGet('stage_'+id, 'Idea');
+      const next = STAGES[(STAGES.indexOf(cur)+1) % STAGES.length];
+      lsSet('stage_'+id, next);
+      el.className = 'badge '+stageClass(next)+' stage-pill';
+      el.textContent = next;
+      refreshContentPool();
+    };
+  });
+  document.querySelectorAll('[data-date-id]').forEach(el=>{
+    el.onchange = ()=>{ lsSet('date_'+el.dataset.dateId, el.value); };
+  });
+  document.querySelectorAll('[data-link-id]').forEach(el=>{
+    el.onblur = ()=>{ lsSet('link_'+el.dataset.linkId, el.value); };
+  });
+}
+renderLongform();
+
+// ---- deep dives (medium-length X posts) ----
+let mediumItems = [
+  {bucket:'B', pillar:'Pillar 1', status:'Draft', preview:"The UTXO ownership problem, in full<br><br>Quick definition first: a UTXO is just the accounting term for a specific chunk of Bitcoin sitting at a specific address, the actual unit the network tracks when it says you own something. Every 'Bitcoin lending' product today asks you to trust that a company is holding one of those on your behalf. Bridges ask you to trust a multisig or a light client. Custodians ask you to trust an audit. None of that is the same as a program actually owning the coin.<br><br>Here's the unlock, in plain terms: a group of validators, spread across different operators, can jointly control a real Bitcoin UTXO the way a shared safe deposit box works, nobody can open it alone, but the group can move it under rules anyone can check. Not a wrapped copy, not an IOU, the actual coin, and the ownership change settles on Bitcoin itself. That's the primitive everything else sits on. Programmable collateral doesn't mean Bitcoin changes. Bitcoin stays exactly what it is. What changes is what a program can verifiably do with it, and what a lender can verifiably see."},
+  {bucket:'B', pillar:'Pillar 1', status:'Draft', preview:"Why a validator threshold isn't 'trust us'<br><br>The instinct when you hear 'a validator set controls the asset' is to assume it's just custody with extra steps, a company, but with more people in the room. It isn't, and the difference is worth spelling out.<br><br>A custodian is one company that can move your coin whenever it decides to, using whatever internal rules it happens to have. A validator threshold works more like a vault that needs several different keyholders to show up and agree before it opens, and the rules for who counts as a keyholder are fixed in advance, not adjustable by any one of them. No single party, including Arch, can move the asset alone. That's an engineering choice, not a slogan, and it's the reason programmable collateral can be priced like real collateral instead of 'trust me' collateral."},
+  {bucket:'B', pillar:'Pillar 2', status:'Draft', preview:"Lending vs. margin, the distinction that actually matters<br><br>Quick version: a loan lets you borrow against something you own. Margin lets you borrow against something you own AND get credit for what you're doing with it. That difference is the whole story.<br><br>Almost everything called 'Bitcoin credit' today is the first kind, over-collateralized lending. You lock up more value than you borrow, the protocol holds your collateral, and if the price moves against you, you get liquidated. The protocol never sees what you're actually doing with the money, only what you deposited, so it has to assume the worst.<br><br>A prime brokerage account is the second kind. The venue sees your collateral and your open position together, so it can extend credit beyond your deposit value, real leverage, not just a loan capped by a static pile of collateral. Bitcoin has never had a native version of that. Wrapping BTC and dropping it into a lending pool doesn't create margin, it just creates a bigger, more complicated version of the same over-collateralized loan."},
+  {bucket:'B', pillar:'Pillar 2', status:'Draft', preview:"What capital efficiency actually means here<br><br>'Capital efficiency' sounds like a slide-deck word, so here's the plain version: it's about how much credit you can get for a given amount of collateral, and why.<br><br>A lender who only sees your collateral has to assume the worst about what you're doing with your position, so it lends you less than it probably could. A lender who sees your collateral and your position together can price the real risk instead of guessing, so it can extend more credit without taking on more actual danger.<br><br>That's the entire case for margin over lending. It's not about being more aggressive, it's about the lender having enough information to say yes more often, and say yes accurately. The upside isn't unlimited leverage, it's leverage that's priced for what it actually is instead of not being offered at all."},
+  {bucket:'B', pillar:'Pillar 3', status:'Draft', preview:"What actually broke last cycle<br><br>Go back and read the post-mortems from the last Bitcoin lending collapse. The pattern repeats: a platform says the collateral is there, users have no way to check, and by the time anyone finds out otherwise, it's gone. That's not a story about Bitcoin failing as an asset. It's a story about a company's word being the only proof anyone had.<br><br>The fix isn't a better audit schedule or a more trusted logo. It's making the collateral checkable the way you'd check a package's tracking number, not checkable if you ask nicely, checkable by default, built into the system. Verifiable ownership at Bitcoin's base layer removes the one thing every one of those collapses had in common: a party you had no choice but to take at their word."},
+  {bucket:'B', pillar:'Pillar 3', status:'Draft', preview:"Custody and control are not the same thing<br><br>Custody is about who's physically holding an asset. Control is about who can actually move it, and under what conditions. You can have one without the other, and that gap is basically what a bridge is: a custodian holding the real Bitcoin on one side while handing you a claim on another chain, with the actual rules for moving that Bitcoin sitting somewhere you usually can't inspect.<br><br>Native, programmable ownership closes that gap. The party who can move the asset is defined by rules anyone can verify, not a legal promise you have to take on faith. Small distinction, big implication: it's the difference between 'we promise your funds are safe' and 'here's exactly why they can't move except under these specific conditions, go check for yourself.'"},
+  {bucket:'B', pillar:'Pillar 4', status:'Draft', preview:"The vocabulary Bitcoin credit is about to need<br><br>Margin call, haircut, cross-margining. None of these are new or exotic, they're just the everyday language of how mature credit markets manage risk, translated here so none of it feels like a wall of jargon.<br><br>A haircut is simple: if your collateral is worth $100, a lender might only count it as $80 when deciding how much to lend you, the 'haircut' is that discount, and it exists so a small price drop doesn't immediately put the loan underwater. A margin call is what happens when your collateral's value drops far enough that it no longer covers what you owe, the lender asks you to add more or close the position, the same way a landlord might ask for a bigger deposit if your circumstances changed. Cross-margining just means looking at all your positions together instead of one at a time, so a loss in one spot can be offset by a gain in another, instead of each position getting judged alone.<br><br>None of this exists in Bitcoin lending today because none of it is possible without a venue that can see your collateral and your position at the same time. As Bitcoin-native prime brokerage becomes real, this is the vocabulary that ends up mattering. Better to learn it now than during your first margin call."},
+  {bucket:'B', pillar:'Pillar 4', status:'Draft', preview:"Why 'risk-free rate' is the wrong term for Bitcoin, for now<br><br>Quick definition: a risk-free rate is the return you could earn with about as close to zero risk as investing gets, think a US Treasury bill for dollars. Every mature market prices things against a baseline like that. Bitcoin doesn't have one.<br><br>Not because it's impossible, but because a risk-free rate doesn't get invented, it emerges from a real credit market where lots of lending happens at prices that reflect actual, measurable risk. That market hasn't existed for Bitcoin yet.<br><br>Here's why it matters more than it sounds like it should: without a baseline rate, there's no clean way to price a margin loan against Bitcoin, no clean way to compare a Bitcoin yield to anything else, nothing to measure a good deal against. Prime brokerage infrastructure is what eventually produces that rate, not by announcing one, but by creating enough real, priced lending activity that a baseline shows up on its own."},
+  {bucket:'B', pillar:'Pillar 5', status:'Draft', preview:"Why build the chain instead of shipping on someone else's<br><br>Building an independent chain, its own software, its own validators, its own rules, is the slower path by a wide margin. It would be faster to launch as an app on an existing chain and borrow its security, its users, its tooling.<br><br>The tradeoff is control over the one thing that matters most here: exactly how the validators are structured, exactly how they hold Bitcoin, exactly what assumptions sit underneath 'programmable collateral' as an idea. Those aren't decisions you want to inherit from someone else's roadmap, especially when the whole point is that people can verify the rules for themselves. Slower to ship, but the alternative was building a credit system on top of a foundation nobody designed for it."},
+  {bucket:'B', pillar:'Pillar 1/2', status:'Draft', preview:"Bitcoin-native Prime Brokerage, the whole idea in one place<br><br>A prime broker, in plain terms, is a service that lets you borrow against what you hold and trade with more size than your own capital alone would allow, while the broker keeps an eye on both your collateral and your open positions to manage the risk. Wall Street has run on this model for decades. Bitcoin has never had a real version of it.<br><br>Not because the demand isn't there, holders want yield, leverage, and liquidity without giving up their own keys, but because the piece that makes it safe to offer, a program verifiably owning real Bitcoin instead of a company just saying it does, didn't exist until now. The technology earns the right to make the prime brokerage claim. The prime brokerage framing is what makes the technology matter to anyone who isn't already deep in the weeds of how it works."},
+  {bucket:'B', pillar:'Pillar 5', status:'Draft', preview:"Who this is actually for<br><br>Worth being precise about one thing: who Arch is built for, and who Arch is trying to impress, are two different groups. The person Arch is built for is the self-custodial Bitcoin holder, someone who already holds their own keys and has had to choose, until now, between staying self-custodial or giving that up to get institutional-grade credit and leverage.<br><br>The standard Arch is held to, the rigor, the way it needs to behave when things get stressful, is institutional. That's a statement about how carefully it's built, not about who's supposed to log in and use it. Institutions mostly don't come on-chain directly, they use custodians. The self-custodial holder is the actual user here, and giving that person institutional-grade access without asking them to hand over their keys is the entire point."},
+  {bucket:'B', pillar:'Pillar 1/2/3', status:'Draft', preview:"The credit unlock, start to finish<br><br>Put the pieces together and the whole argument is simple, even though each part sounds technical on its own. Programs can now verifiably own real Bitcoin UTXOs, not wrapped versions, not IOUs, the actual coin, and that ownership settles on Bitcoin itself. That's the unlock.<br><br>Because that ownership is provable instead of just claimed, a lender can see your collateral and your position at the same time, which means it can offer real credit, margin, not just a loan capped below what your collateral is worth. That's the leverage case.<br><br>And because the collateral itself is checkable instead of something you take on faith, the exact failure that wiped out the last lending cycle, a platform simply lying about what it held, stops being possible the same way. Provable ownership. Real leverage. Checkable collateral. Three ideas, one primitive underneath all of them."},
+];
+try{ mediumItems = mediumItems.concat(JSON.parse(lsGet('custom_md', '[]'))); }catch(e){}
+
+function renderMedium(){
+  const visible = mediumItems
+    .map((it,idx)=>({ it, id:'md-'+idx }))
+    .filter(x => passesStatusFilter('md', x.id));
+  document.getElementById('mediumBody').innerHTML = visible.map(({it,id})=>{
+    return `
+    <tr>
+      <td><span class="badge ${bucketClass(it.bucket)}">${bucketLabel(it.bucket)}</span></td>
+      <td>${it.pillar}</td>
+      <td class="preview-lg" contenteditable="true" data-edit-id="${id}">${editedText(id, it.preview)}</td>
+      <td><span class="badge ${statusClass(it.status)}">${it.status}</span></td>
+      <td>${reviewCellHTML(id)}</td>
+    </tr>`;
+  }).join('');
+  wireReviewControls();
+}
+renderMedium();
 
 // ---- polls ----
-const pollItems = [
+let pollItems = [
   {q:'What actually earns your trust with Bitcoin collateral?', pillar:'Pillar 3', opts:'A trusted brand name · Being able to verify it · No one party in control · I’d rather self-custody'},
   {q:'Most "Bitcoin loans" cap what you can borrow below collateral value. That’s...', pillar:'Pillar 2', opts:'Smart, safety first · A missed opportunity · Fine, I don’t borrow · Never thought about it'},
   {q:'Which piece of "real" finance is Bitcoin still missing?', pillar:'Pillar 4', opts:'A yield curve · Margin, not just loans · Transparent settlement · Nothing, it’s fine'},
   {q:'Wrapped BTC or the real thing as collateral, which do you trust?', pillar:'Pillar 1', opts:'Wrapped is fine · Only native BTC · Depends on the platform · I don’t lever up'},
   {q:'An app on someone else’s chain, or a chain built from scratch?', pillar:'Pillar 5', opts:'App on existing chain · Its own validators · Doesn’t matter to me · I look at what’s built on top'},
   {q:'Which one are you right now?', pillar:'Segmentation', opts:'HODL only · Lend or borrow occasionally · Trade actively with leverage · Curious, haven’t tried'},
+  {q:'If you couldn’t verify where your Bitcoin collateral actually sat, would you still deposit it?', pillar:'Pillar 1', opts:'Yes, the yield’s worth it · No, deal-breaker · Depends on the platform’s reputation · I don’t deposit collateral anywhere'},
+  {q:'You’re offered leverage against your Bitcoin. What do you want to know first?', pillar:'Pillar 2', opts:'Who’s on the other side of my position · What triggers liquidation · How the rate is set · Nothing, I’m in'},
+  {q:'The biggest lending collapses last cycle shared one root cause. What was it?', pillar:'Pillar 3', opts:'Bad market conditions · Opaque collateral · Too much leverage · Just bad luck'},
+  {q:'Bitcoin doesn’t have a risk-free rate yet. Does that matter to you?', pillar:'Pillar 4', opts:'A lot, it’s why I stay in cash · A little, I’d use one if it existed · Not really, I just hold · Never thought about it'},
+  {q:'Would you rather a Bitcoin product ship faster on someone else’s chain, or slower on its own?', pillar:'Pillar 5', opts:'Faster, ship it · Slower, get the architecture right · Depends what’s at stake · Don’t care, just works'},
+  {q:'What does "prime brokerage" mean to you before we explain it?', pillar:'Positioning', opts:'Nothing, first time hearing it · Roughly, from TradFi · I could explain it to someone else · Thought it was a crypto term'},
+  {q:'Over-collateralized loan or margin account, which is the better deal for a Bitcoin holder?', pillar:'Pillar 2', opts:'Over-collateralized, safer · Margin, more efficient · Depends on the rate · I don’t borrow against BTC'},
+  {q:'A validator threshold controls the asset instead of one company. More or less comfortable?', pillar:'Pillar 1', opts:'More comfortable · Less comfortable · Same either way · Depends how the threshold’s set'},
+  {q:'Are you the holder institutions are trying to become, or the one they reach through a custodian?', pillar:'Audience', opts:'I hold my own keys · I use a custodian · Both, depends on the account · Neither, I just watch'},
+  {q:'What would actually get you to lever up against Bitcoin?', pillar:'Segmentation', opts:'A rate I can verify · A brand I already trust · Nothing, I don’t lever up · Already doing it somewhere'},
 ];
-document.getElementById('pollsGrid').innerHTML = pollItems.map((p,idx)=>{
-  const id = 'pl-'+idx;
-  return `
-  <div class="card">
-    <h3 contenteditable="true" data-edit-id="${id}-q">${editedText(id+'-q', p.q)}</h3>
-    <span class="badge bg-b">${p.pillar}</span>
-    <p contenteditable="true" data-edit-id="${id}-opts" style="margin-top:8px;">${editedText(id+'-opts', p.opts)}</p>
-    ${reviewCellHTML(id)}
-  </div>`;
-}).join('');
+try{ pollItems = pollItems.concat(JSON.parse(lsGet('custom_pl', '[]'))); }catch(e){}
+
+function renderPolls(){
+  const visible = pollItems
+    .map((p,idx)=>({ p, id:'pl-'+idx }))
+    .filter(x => passesStatusFilter('pl', x.id));
+  document.getElementById('pollsGrid').innerHTML = visible.map(({p,id})=>{
+    return `
+    <div class="card">
+      <h3 contenteditable="true" data-edit-id="${id}-q">${editedText(id+'-q', p.q)}</h3>
+      <span class="badge bg-b">${p.pillar}</span>
+      <p contenteditable="true" data-edit-id="${id}-opts" style="margin-top:8px;">${editedText(id+'-opts', p.opts)}</p>
+      ${reviewCellHTML(id)}
+    </div>`;
+  }).join('');
+  wireReviewControls();
+}
+renderPolls();
 
 // ---- catalyst map ----
 const catalystItems = [
@@ -795,44 +1089,139 @@ const bucketItemsFull = [
 document.getElementById('bucketsGrid').innerHTML = bucketItemsFull.map(b=>`
   <div class="card"><h3>${b.title}</h3><p>${b.body}</p><div class="angles">${b.note}</div></div>`).join('');
 
-// ---- urgent ----
-document.getElementById('urgentList').innerHTML = `
-  <div class="banner">Ticket <strong>GTM-CALLAGENDA-1</strong> (an agenda for an internal GTM/social call flagged as imminent) doesn’t show as delivered, worth a check that it didn’t get missed if that call already happened.</div>
-
-  <div class="urgent-group"><h4>Ready, just needs your click</h4>
-    <div class="u-item"><span class="u-dot green"></span><div><p class="u-title">Send the August Arch Archives (Issue 003) <span class="u-tag">NEWS-003</span></p><p class="u-desc">All three gates approved, DoD passed. Send-ready HTML at <code>newsletter/issues/2026-08-arch-archives.html</code>. Only action left: paste into beehiiv and hit Send.</p></div></div>
-    <div class="u-item"><span class="u-dot green"></span><div><p class="u-title">Publish the July blog, "Bitcoin’s Missing Risk-Free Rate" <span class="u-tag">CONT-BLOG-JUL2</span></p><p class="u-desc">Gate-cleared since 07-06, still sitting unpublished. Editor and Brand both approved. A light figure sanity-check on publish day is worth doing since it’s overdue.</p></div></div>
-  </div>
-
-  <div class="urgent-group"><h4>Blocking other work, needs a decision</h4>
-    <div class="u-item"><span class="u-dot red"></span><div><p class="u-title">Mainnet / beta-live window <span class="u-tag">gtm-catalyst-map</span></p><p class="u-desc">The single biggest lever in the whole GTM map. Until a real window is set, Phase 2 and 3 stay slots instead of a real sequence.</p></div></div>
-    <div class="u-item"><span class="u-dot red"></span><div><p class="u-title">8 role-migration decisions (Discord to Circle) <span class="u-tag">COMM-ROLEMECH</span></p><p class="u-desc">Tiers, benefits, and claim tooling proposed and ready, blocking Discord Post C and the Circle migration announcement. Needs Tree and Matt.</p></div></div>
-    <div class="u-item"><span class="u-dot amber"></span><div><p class="u-title">Approve the revised content pillars <span class="u-tag">content-pillars-v2</span></p><p class="u-desc">Still directional. Everything drafted this session builds on this set, worth locking so Content-Marketing isn’t building on sand.</p></div></div>
-    <div class="u-item"><span class="u-dot amber"></span><div><p class="u-title">Greenlight for Discord Post B (Introducing Arch Prime) <span class="u-tag">CONT-DISCORD-2</span></p><p class="u-desc">Drafted, on hold, needs Matt’s explicit public greenlight since Discord is more visible than the newsletter list.</p></div></div>
-  </div>
-
-  <div class="urgent-group"><h4>Waiting on your picks</h4>
-    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">4 batches of blog concepts, ~50 ideas total <span class="u-tag">CONT-BLOG-IDEAS-1–4</span></p><p class="u-desc">Evergreen, Arch-education, and prime-brokerage/macro concepts all delivered inline this session, nothing drafted past idea stage until picked.</p></div></div>
-    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">Circle roadmap decisions <span class="u-tag">COMM-001</span></p><p class="u-desc">API key, space-map approval, tags, pinned "What is Arch" post, LP/investor shareables, engagement cadence, all sitting in <code>memory/playbooks/circle-roadmap.md</code>.</p></div></div>
-    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">Tutorials and guides polish, execution items <span class="u-tag">CONT-GUIDES-1</span></p><p class="u-desc">5 missing banners, a Swap step-5 copy fix, video walkthroughs (needs Jonah looped in). Plan’s ready in <code>memory/playbooks/tutorials-guides-polish.md</code>.</p></div></div>
-  </div>
-
-  <div class="urgent-group"><h4>Small housekeeping</h4>
-    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">Fix cell D17 in the GTM Google Sheet</p><p class="u-desc">Got auto-parsed as a date mid-edit, should read "2, 3" not a serial number, on the "Double down: announcing Arch Prime" row.</p></div></div>
-    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">Check X’s rules on self-swapping premium handles</p><p class="u-desc">Action item from the 08-07 sync, needed before the @Arch / @ArchNetwork consolidation idea can even be evaluated as real.</p></div></div>
-    <div class="u-item"><span class="u-dot grey"></span><div><p class="u-title">Schedule the dedicated X/content cadence call</p><p class="u-desc">Tree, Zack, Mohamed, separate from the broader GTM sync. Not yet on the calendar.</p></div></div>
-  </div>
-`;
-
 // ---- schedule / calendar ----
-const contentPool = [
-  ...items.map((i,idx)=>({ id:'sf-'+idx, type:'sf', typeLabel:'Shortform', bucket:i.bucket,
-    text: editedText('sf-'+idx, i.preview) })),
-  ...longformItems.map((it,idx)=>({ id:'lf-'+idx, type:'lf', typeLabel:'Longform', bucket:it.bucket,
-    text: editedText('lf-'+idx, it.title) })),
-  ...pollItems.map((p,idx)=>({ id:'pl-'+idx, type:'pl', typeLabel:'Poll', bucket:'B',
-    text: editedText('pl-'+idx+'-q', p.q) })),
-];
+let contentPool = [];
+function refreshContentPool(){
+  contentPool = [
+    ...items.map((i,idx)=>({ id:'sf-'+idx, type:'sf', typeLabel:'Shortform', bucket:i.bucket,
+      text: editedText('sf-'+idx, i.preview) })),
+    ...mediumItems.map((i,idx)=>({ id:'md-'+idx, type:'md', typeLabel:'Deep dive', bucket:i.bucket,
+      text: editedText('md-'+idx, i.preview) })),
+    ...longformItems.map((it,idx)=>({ id:'lf-'+idx, type:'lf', typeLabel:'Blog / Article', bucket:it.bucket,
+      text: editedText('lf-'+idx, it.title) })),
+    ...pollItems.map((p,idx)=>({ id:'pl-'+idx, type:'pl', typeLabel:'Poll', bucket:'B',
+      text: editedText('pl-'+idx+'-q', p.q) })),
+  ];
+}
+refreshContentPool();
+
+function refreshAllViews(){
+  refreshContentPool();
+  render();
+  renderMedium();
+  renderLongform();
+  renderPolls();
+  if(typeof renderDashboardHome === 'function') renderDashboardHome();
+}
+wireStatusFilters();
+
+// ---- add new content ----
+const ADD_FORMS = {
+  sf: {
+    title: 'Add a shortform post',
+    fields: `
+      <div class="add-row">
+        <div class="add-field"><label>Bucket</label>
+          <select name="bucket"><option value="A">A, Bullish BTC / Macro</option><option value="B" selected>B, Arch Education</option><option value="C">C, Campaigns</option></select>
+        </div>
+        <div class="add-field"><label>Format</label>
+          <select name="format"><option value="Single" selected>Single</option><option value="Thread">Thread</option></select>
+        </div>
+      </div>
+      <div class="add-field"><label>Pillar (optional)</label><input name="pillar" type="text" placeholder="e.g. Pillar 2"></div>
+      <div class="add-field"><label>Copy</label><textarea name="preview" placeholder="Draft the post..." required></textarea></div>
+      <button class="add-submit" type="submit">Add post</button>`,
+    submit(fd){
+      const before = items.length;
+      items.push({ bucket: fd.get('bucket'), pillar: fd.get('pillar') || '–', format: fd.get('format'),
+        status: 'Draft', preview: fd.get('preview') });
+      persistCustom('custom_sf', items, 49);
+      render();
+    },
+  },
+  lf: {
+    title: 'Add a blog / article idea',
+    fields: `
+      <div class="add-field"><label>Title</label><input name="title" type="text" required></div>
+      <div class="add-row">
+        <div class="add-field"><label>Bucket</label>
+          <select name="bucket"><option value="A">A, Bullish BTC / Macro</option><option value="B" selected>B, Arch Education</option><option value="C">C, Campaigns</option></select>
+        </div>
+        <div class="add-field"><label>Stage</label>
+          <select name="stage">${STAGES.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+        </div>
+      </div>
+      <button class="add-submit" type="submit">Add article</button>`,
+    submit(fd){
+      longformItems.push({ title: fd.get('title'), bucket: fd.get('bucket'), stage: fd.get('stage'), source: 'Added manually' });
+      persistCustom('custom_lf', longformItems, 27);
+      renderLongform();
+    },
+  },
+  md: {
+    title: 'Add a deep dive',
+    fields: `
+      <div class="add-row">
+        <div class="add-field"><label>Bucket</label>
+          <select name="bucket"><option value="A">A, Bullish BTC / Macro</option><option value="B" selected>B, Arch Education</option><option value="C">C, Campaigns</option></select>
+        </div>
+        <div class="add-field"><label>Pillar</label><input name="pillar" type="text" placeholder="e.g. Pillar 2"></div>
+      </div>
+      <div class="add-field"><label>Post (medium length, a few short paragraphs)</label><textarea name="preview" style="min-height:160px;" placeholder="Draft the deep dive..." required></textarea></div>
+      <button class="add-submit" type="submit">Add deep dive</button>`,
+    submit(fd){
+      const body = fd.get('preview').replace(/\n/g, '<br>');
+      mediumItems.push({ bucket: fd.get('bucket'), pillar: fd.get('pillar') || 'Pillar', status: 'Draft', preview: body });
+      persistCustom('custom_md', mediumItems, 12);
+      renderMedium();
+    },
+  },
+  pl: {
+    title: 'Add a poll concept',
+    fields: `
+      <div class="add-field"><label>Question</label><input name="q" type="text" required></div>
+      <div class="add-field"><label>Pillar / tag</label><input name="pillar" type="text" placeholder="e.g. Pillar 3"></div>
+      <div class="add-field"><label>Options</label><textarea name="opts" placeholder="Separate each option with · , e.g. Option one · Option two" required></textarea></div>
+      <button class="add-submit" type="submit">Add poll</button>`,
+    submit(fd){
+      pollItems.push({ q: fd.get('q'), pillar: fd.get('pillar') || 'Pillar', opts: fd.get('opts') });
+      persistCustom('custom_pl', pollItems, 16);
+      renderPolls();
+    },
+  },
+};
+function persistCustom(key, arr, builtInCount){
+  lsSet(key, JSON.stringify(arr.slice(builtInCount)));
+}
+let addModalType = null;
+function openAddModal(type){
+  addModalType = type;
+  const cfg = ADD_FORMS[type];
+  document.getElementById('addModalTitle').textContent = cfg.title;
+  document.getElementById('addForm').innerHTML = cfg.fields;
+  document.getElementById('addModal').style.display = 'flex';
+}
+function closeAddModal(){
+  document.getElementById('addModal').style.display = 'none';
+  addModalType = null;
+}
+document.getElementById('addSfBtn').addEventListener('click', ()=> openAddModal('sf'));
+document.getElementById('addMdBtn').addEventListener('click', ()=> openAddModal('md'));
+document.getElementById('addLfBtn').addEventListener('click', ()=> openAddModal('lf'));
+document.getElementById('addPlBtn').addEventListener('click', ()=> openAddModal('pl'));
+document.getElementById('addModalClose').addEventListener('click', closeAddModal);
+document.getElementById('addModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'addModal') closeAddModal();
+});
+document.getElementById('addForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  if(!addModalType) return;
+  const fd = new FormData(e.target);
+  ADD_FORMS[addModalType].submit(fd);
+  refreshContentPool();
+  if(typeof renderDashboardHome === 'function') renderDashboardHome();
+  closeAddModal();
+});
 
 function getSchedule(){
   try{ return JSON.parse(lsGet('schedule', '{}')); }catch(e){ return {}; }
@@ -912,13 +1301,24 @@ function closeScheduleModal(){
   pendingDateKey = null;
 }
 function renderModalList(q){
+  refreshContentPool();
   const query = q.toLowerCase();
-  const matches = contentPool.filter(c => c.text.toLowerCase().includes(query));
-  document.getElementById('modalList').innerHTML = matches.slice(0, 200).map(c => `
+  const rank = { approved:0, pending:1, rejected:2 };
+  const matches = contentPool
+    .filter(c => c.text.toLowerCase().includes(query))
+    .slice()
+    .sort((a,b) => rank[statusOf(a.id)] - rank[statusOf(b.id)]);
+  document.getElementById('modalList').innerHTML = matches.slice(0, 200).map(c => {
+    const s = statusOf(c.id);
+    const statusTag = s==='approved' ? '<span class="badge st-confirmed">Approved</span>'
+      : s==='rejected' ? '<span class="badge st-tbd">Archived</span>' : '';
+    return `
     <div class="modal-item" data-pick-id="${c.id}">
       <span class="badge ${bucketClass(c.bucket)}">${c.typeLabel}</span>
+      ${statusTag}
       <span class="mi-text">${c.text}</span>
-    </div>`).join('') || '<p class="note" style="margin:10px 8px;">No matches.</p>';
+    </div>`;
+  }).join('') || '<p class="note" style="margin:10px 8px;">No matches.</p>';
 
   document.querySelectorAll('[data-pick-id]').forEach(row=>{
     row.onclick = () => {
@@ -955,6 +1355,149 @@ document.getElementById('scheduleModal').addEventListener('click', (e)=>{
 document.getElementById('modalSearch').addEventListener('input', (e)=> renderModalList(e.target.value));
 
 renderCalendar();
+
+// ---- dashboard home: real numbers, not fixed placeholders ----
+function statusOf(id){ return lsGet('status_'+id, 'pending'); }
+
+const reviewPool = [
+  ...contentPool.map(c => ({
+    id: c.id, type: c.type, text: c.text,
+    section: 'content', sub: c.type==='sf' ? 'shortform' : c.type==='md' ? 'medium' : c.type==='lf' ? 'longform' : 'polls',
+  })),
+  ...catalystItems.map((c,idx) => ({
+    id: 'cat-'+idx, type: 'cat', text: editedText('cat-'+idx+'-name', c.name),
+    section: 'catalysts', sub: null,
+  })),
+];
+
+function goToSection(section, sub){
+  const navBtn = document.querySelector(`.sb-item[data-section="${section}"]`);
+  if(navBtn) navBtn.click();
+  if(sub){
+    const subBtn = document.querySelector(`.subtab[data-sub="${sub}"]`);
+    if(subBtn) subBtn.click();
+  }
+}
+function wireGoto(root){
+  root.querySelectorAll('[data-goto-section]').forEach(btn=>{
+    btn.addEventListener('click', ()=> goToSection(btn.dataset.gotoSection, btn.dataset.gotoSub || null));
+  });
+}
+
+function renderDashboardHome(){
+  const reviewCounts = { approved:0, pending:0, rejected:0 };
+  reviewPool.forEach(it => { reviewCounts[statusOf(it.id)]++; });
+
+  const sched = getSchedule();
+  const scheduledDays = Object.keys(sched).filter(k => (sched[k] || []).length > 0).length;
+
+  const totalContent = items.length + mediumItems.length + longformItems.length + pollItems.length;
+
+  const metrics = [
+    { label:"Total content drafted", value:totalContent, cls:"white", sub:totalContent+" items, shortform, deep dives, blog, and polls" },
+    { label:"Approved", value:reviewCounts.approved, cls:"gold", sub:"of "+reviewPool.length+" items reviewed" },
+    { label:"Needs changes", value:reviewCounts.rejected, cls:"white", sub:"flagged during review" },
+    { label:"Days scheduled", value:scheduledDays, cls:"gold", sub:"on the content calendar" },
+  ];
+  document.getElementById('metrics').innerHTML = metrics.map(m=>`
+    <div class="metric">
+      <div class="m-label">${m.label}</div>
+      <div class="m-value ${m.cls}">${m.value}</div>
+      <div class="m-sub">${m.sub}</div>
+    </div>`).join('');
+
+  // needs your review: rejected first, then pending, approved excluded
+  const typeLabels = { sf:'Shortform', md:'Deep dive', lf:'Blog / Article', pl:'Poll', cat:'Catalyst' };
+  const needing = reviewPool
+    .filter(it => statusOf(it.id) !== 'approved')
+    .sort((a,b) => (statusOf(a.id)==='rejected'?0:1) - (statusOf(b.id)==='rejected'?0:1))
+    .slice(0, 6);
+  const needsReviewEl = document.getElementById('needsReview');
+  if(needing.length === 0){
+    needsReviewEl.innerHTML = '<div class="empty-state">Everything reviewed so far is approved. Nice.</div>';
+  } else {
+    needsReviewEl.innerHTML = needing.map(it => {
+      const s = statusOf(it.id);
+      return `
+      <div class="nr-item">
+        <span class="nr-dot ${s}"></span>
+        <div class="nr-text">
+          <p class="nr-title">${it.text}</p>
+          <span class="nr-meta">${typeLabels[it.type]}, ${s==='rejected' ? 'needs changes' : 'pending review'}</span>
+        </div>
+        <button class="nr-go" data-goto-section="${it.section}" ${it.sub ? `data-goto-sub="${it.sub}"` : ''}>Review</button>
+      </div>`;
+    }).join('');
+    wireGoto(needsReviewEl);
+  }
+
+  // coming up: next scheduled items from today forward
+  const today = new Date();
+  const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const upcoming = [];
+  Object.keys(sched).sort().forEach(key => {
+    if(key >= todayKey){
+      (sched[key] || []).forEach(entry => upcoming.push({ key, ...entry }));
+    }
+  });
+  const comingUpEl = document.getElementById('comingUp');
+  if(upcoming.length === 0){
+    comingUpEl.innerHTML = '<div class="empty-state">Nothing on the calendar yet. Add content from the Schedule tab.</div>';
+  } else {
+    const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    comingUpEl.innerHTML = upcoming.slice(0, 5).map(u => {
+      const [y,m,d] = u.key.split('-').map(Number);
+      return `
+      <div class="cu-item">
+        <div class="cu-date"><span class="cu-day">${d}</span>${MONTH_ABBR[m-1]}</div>
+        <span class="cu-text">${u.text}</span>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('bucketChartSub').textContent = totalContent + ' drafted items across the three content directions';
+
+  const bucketCounts = {A:0,B:0,C:0};
+  items.forEach(i=>bucketCounts[i.bucket]++);
+
+  if(__bucketChart) __bucketChart.destroy();
+  __bucketChart = new Chart(document.getElementById('bucketChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Bullish BTC / Macro', 'Arch Education', 'Campaigns & Partnerships'],
+      datasets: [{
+        data: [bucketCounts.A, bucketCounts.B, bucketCounts.C],
+        backgroundColor: ['#736FB9', '#EC641D', '#FCC76E'],
+        borderRadius: 6,
+        barThickness: 46,
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{ beginAtZero:true, grid:{color:'#f0ead9'} }, x:{ grid:{display:false} } }
+    }
+  });
+
+  if(__statusChart) __statusChart.destroy();
+  __statusChart = new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Approved', 'Pending review', 'Needs changes'],
+      datasets: [{
+        data: [reviewCounts.approved, reviewCounts.pending, reviewCounts.rejected],
+        backgroundColor: ['#4a7a5f', '#c9c3ae', '#b8492f'],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11} } } }
+    }
+  });
+}
+let __bucketChart = null, __statusChart = null;
+renderDashboardHome();
 
 }
 boot();
