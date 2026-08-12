@@ -6,6 +6,14 @@ export const config = {
 };
 
 export default async function middleware(request) {
+  // Temporary kill switch while email delivery to non-Resend-account
+  // addresses is unverified. Set DISABLE_AUTH=true in Vercel env vars to
+  // let anyone with the URL in; remove it (or set to anything else) to put
+  // the sign-in gate back.
+  if (process.env.DISABLE_AUTH === 'true') {
+    return next();
+  }
+
   const cookieHeader = request.headers.get('cookie') || '';
   const token = readCookie(cookieHeader, 'arch_session');
   const session = token ? await verifySession(token, process.env.SESSION_SECRET) : null;

@@ -6,10 +6,13 @@ const STATE_KEY = 'archdash:state';
 export default async function handler(req, res) {
   // Belt-and-suspenders: middleware already gates this route, but verify
   // the session here too in case the route is ever hit directly.
-  const token = readCookie(req.headers.cookie || '', 'arch_session');
-  const session = token ? await verifySession(token, process.env.SESSION_SECRET) : null;
-  if (!session) {
-    return res.status(401).json({ error: 'Not signed in' });
+  // Same temporary kill switch as middleware.js — see the note there.
+  if (process.env.DISABLE_AUTH !== 'true') {
+    const token = readCookie(req.headers.cookie || '', 'arch_session');
+    const session = token ? await verifySession(token, process.env.SESSION_SECRET) : null;
+    if (!session) {
+      return res.status(401).json({ error: 'Not signed in' });
+    }
   }
 
   if (req.method === 'GET') {
