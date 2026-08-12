@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { kv } from '../../lib/kv.js';
 import { Resend } from 'resend';
 import { isAllowed } from '../../config/allowlist.js';
 

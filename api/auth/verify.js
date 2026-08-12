@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { kv } from '../../lib/kv.js';
 import { signSession } from '../../lib/auth.js';
 
 export default async function handler(req, res) {

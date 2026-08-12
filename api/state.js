@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { kv } from '../lib/kv.js';
 import { verifySession, readCookie } from '../lib/auth.js';
 
 const STATE_KEY = 'archdash:state';

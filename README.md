@@ -7,7 +7,8 @@ serverless functions, no framework, deploys straight to Vercel.
 
 - `index.html`, `hub.html`, `dashboard.html`, `login.html` — the site.
 - `api/state.js` — shared state (edits, approvals, feedback, the schedule),
-  stored in Vercel KV so everyone who signs in sees the same data.
+  stored in Upstash Redis (via Vercel's Marketplace storage) so everyone who
+  signs in sees the same data.
 - `api/auth/*` — magic-link email sign-in.
 - `api/admin-content.js` — a separate write path, protected by a static key
   instead of a browser session, for publishing drafted content (new posts,
@@ -42,11 +43,17 @@ there's no merge conflict on first push.)
 - Deploy. It'll fail on the first build/run until the env vars below are set,
   that's expected.
 
-### 3. Connect Vercel KV (shared state storage)
-- In the Vercel project → **Storage** tab → **Create Database** → **KV**
-  (this is Upstash Redis under the hood).
-- Connect it to this project. Vercel auto-injects the `KV_REST_API_URL` /
-  `KV_REST_API_TOKEN` (etc.) env vars, no manual copy-pasting needed.
+### 3. Connect Upstash (shared state storage)
+Vercel's native "KV" product was discontinued; Upstash is the direct
+replacement and lives under the same **Storage** tab.
+- In the Vercel project → **Storage** tab → **Browse Storage** (or **Create
+  Database**) → under **Marketplace Database Providers**, pick **Upstash —
+  Serverless DB (Redis, Vector, Queue, Search)**.
+- Follow its setup screens (pick a plan — the free tier is fine — and
+  connect it to this project).
+- Vercel auto-injects `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
+  into the project's env vars, no manual copy-pasting needed. The code reads
+  them via `Redis.fromEnv()` in `lib/kv.js`.
 
 ### 4. Set up Resend (magic-link emails)
 - Create a free account at resend.com.

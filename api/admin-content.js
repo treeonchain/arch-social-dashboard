@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { kv } from '../lib/kv.js';
 
 // A separate write path for adding content programmatically (used by Claude
 // sessions to publish drafted posts/polls/articles straight to the live
