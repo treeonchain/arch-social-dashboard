@@ -8,7 +8,7 @@
 export const domain = '@arch.network';
 
 export const emails = [
-  // 'someone@example.com',
+  'onchaintree@gmail.com',
 ];
 
 export function isAllowed(email) {
