@@ -298,7 +298,7 @@
   .cal-chip.type-lf{background:#e7edf7;color:#3a5a9c;}
   .cal-chip.type-pl{background:#f7e9f1;color:#9c4a76;}
   .cal-chip.type-md{background:#eaf2ee;color:#3f6b52;}
-  .cal-chip.type-planned{background:#fff;color:var(--muted);border:1px dashed var(--muted-2);}
+  .cal-chip.type-planned{background:#fdeed4;color:#8a5a12;border:1.5px dashed #e8ab4d;font-weight:600;}
   .cal-chip.type-planned .chip-label{cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;}
   .cal-chip.type-planned .chip-label:hover{color:var(--orange);}
 
@@ -585,12 +585,12 @@
                 </select>
               </div>
             </div>
-            <div class="add-field"><label>What's the plan?</label>
-              <textarea id="planNote" placeholder="e.g. Pillar 2 leverage post, tie to ETF flow news"></textarea>
+            <div class="add-field"><label>Notes (optional)</label>
+              <textarea id="planNote" placeholder="Add detail if you have it, e.g. Pillar 2 leverage post, tie to ETF flow news — or leave blank and just lock in the category"></textarea>
             </div>
             <button class="add-submit" type="button" id="planSubmitBtn">Add to calendar</button>
           </div>
-          <p class="note" style="margin:0 20px 16px;">Plans the kind of post going out that day before copy exists. Once it's drafted and approved, click the planned chip on the calendar to attach the real copy.</p>
+          <p class="note" style="margin:0 20px 16px;">Plans the kind of post going out that day before copy exists, category and format are enough. Click the planned chip on the calendar any time to edit it, or switch to "Attach approved copy" to swap in the real, approved copy once it's ready.</p>
         </div>
       </div>
     </div>
@@ -1342,10 +1342,10 @@ function renderCalendar(){
     const dayItems = sched[key] || [];
     const chips = dayItems.map(it => {
       if(it.kind === 'planned'){
-        const label = previewLine('Planned: ' + bucketLabel(it.bucket) + ' ' + (TYPE_LABELS[it.format] || it.format) + ' — ' + it.note);
+        const label = previewLine('Planned: ' + bucketLabel(it.bucket) + ' ' + (TYPE_LABELS[it.format] || it.format) + (it.note ? ' — ' + it.note : ''));
         return `
           <div class="cal-chip type-planned">
-            <span class="chip-label" data-attach-key="${key}" data-attach-id="${it.id}" title="${label.replace(/"/g,'&quot;')}">${label}</span>
+            <span class="chip-label" data-edit-plan-key="${key}" data-edit-plan-id="${it.id}" title="${label.replace(/"/g,'&quot;')}, click to edit or attach copy">${label}</span>
             <button data-remove-key="${key}" data-remove-id="${it.id}">&times;</button>
           </div>`;
       }
@@ -1370,8 +1370,13 @@ function renderCalendar(){
   document.querySelectorAll('[data-add-key]').forEach(btn=>{
     btn.onclick = () => openScheduleModal(btn.dataset.addKey);
   });
-  document.querySelectorAll('[data-attach-key]').forEach(chip=>{
-    chip.onclick = () => openScheduleModal(chip.dataset.attachKey, { replaceId: chip.dataset.attachId, tab: 'attach' });
+  document.querySelectorAll('[data-edit-plan-key]').forEach(chip=>{
+    chip.onclick = () => {
+      const key = chip.dataset.editPlanKey, id = chip.dataset.editPlanId;
+      const s = getSchedule();
+      const item = (s[key] || []).find(it => it.id === id);
+      openScheduleModal(key, { replaceId: id, editItem: item, tab: 'plan' });
+    };
   });
   document.querySelectorAll('[data-remove-key]').forEach(btn=>{
     btn.onclick = () => {
@@ -1387,6 +1392,7 @@ function renderCalendar(){
 
 let pendingDateKey = null;
 let pendingReplaceId = null;
+let pendingEditId = null;
 let modalTab = 'attach';
 
 function setModalTab(tab){
@@ -1402,12 +1408,17 @@ document.querySelectorAll('.modal-tab').forEach(b=>{
 
 function openScheduleModal(key, opts){
   opts = opts || {};
+  const editingPlan = opts.editItem && opts.editItem.kind === 'planned';
   pendingDateKey = key;
   pendingReplaceId = opts.replaceId || null;
+  pendingEditId = editingPlan ? opts.editItem.id : null;
   const [y,m,d] = key.split('-').map(Number);
   document.getElementById('modalDateLabel').textContent = 'Schedule for ' + MONTH_NAMES[m-1] + ' ' + d + ', ' + y;
   document.getElementById('modalSearch').value = '';
-  document.getElementById('planNote').value = '';
+  document.getElementById('planBucket').value = editingPlan ? opts.editItem.bucket : 'B';
+  document.getElementById('planFormat').value = editingPlan ? opts.editItem.format : 'sf';
+  document.getElementById('planNote').value = editingPlan ? (opts.editItem.note || '') : '';
+  document.getElementById('planSubmitBtn').textContent = pendingEditId ? 'Save changes' : 'Add to calendar';
   renderModalList('');
   setModalTab(opts.tab || 'attach');
   document.getElementById('scheduleModal').style.display = 'flex';
@@ -1416,6 +1427,7 @@ function closeScheduleModal(){
   document.getElementById('scheduleModal').style.display = 'none';
   pendingDateKey = null;
   pendingReplaceId = null;
+  pendingEditId = null;
 }
 function renderModalList(q){
   refreshContentPool();
@@ -1458,12 +1470,16 @@ function renderModalList(q){
 document.getElementById('planSubmitBtn').addEventListener('click', ()=>{
   if(!pendingDateKey) return;
   const note = document.getElementById('planNote').value.trim();
-  if(!note) return;
   const bucket = document.getElementById('planBucket').value;
   const format = document.getElementById('planFormat').value;
   const s = getSchedule();
   s[pendingDateKey] = s[pendingDateKey] || [];
-  s[pendingDateKey].push({ id:'plan-'+Date.now(), kind:'planned', bucket, format, note });
+  if(pendingEditId){
+    const existing = s[pendingDateKey].find(it => it.id === pendingEditId);
+    if(existing){ existing.bucket = bucket; existing.format = format; existing.note = note; }
+  } else {
+    s[pendingDateKey].push({ id:'plan-'+Date.now(), kind:'planned', bucket, format, note });
+  }
   setSchedule(s);
   closeScheduleModal();
   renderCalendar();
