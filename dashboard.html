@@ -243,6 +243,14 @@
   .status-pill.pending{background:#f0ede4;color:#8a8672;}
   .status-pill.approved{background:#e7f2ea;color:#4a7a5f;}
   .status-pill.rejected{background:#f7e6e2;color:#b8492f;}
+  .status-btns{display:flex;gap:4px;flex-wrap:wrap;}
+  .status-btn{border:1px solid var(--line);background:var(--warmwhite);border-radius:14px;
+    padding:4px 10px;font-size:10.5px;font-weight:600;color:var(--muted);cursor:pointer;
+    font-family:inherit;transition:all .12s;white-space:nowrap;}
+  .status-btn:hover{border-color:var(--orange);color:var(--orange);}
+  .status-btn.approved.active{background:#e7f2ea;color:#4a7a5f;border-color:#bfe0c9;}
+  .status-btn.pending.active{background:#f0ede4;color:#8a8672;border-color:#ddd6c2;}
+  .status-btn.rejected.active{background:#f7e6e2;color:#b8492f;border-color:#f0c3b6;}
   .fb-toggle{display:block;background:none;border:none;color:var(--orange);font-size:11px;cursor:pointer;
     text-decoration:none;border-bottom:1px dotted var(--orange);padding:0;margin-top:6px;font-family:inherit;
     width:fit-content;}
@@ -288,6 +296,17 @@
   .cal-chip.type-sf{background:#efe9f7;color:#6a4a9c;}
   .cal-chip.type-lf{background:#e7edf7;color:#3a5a9c;}
   .cal-chip.type-pl{background:#f7e9f1;color:#9c4a76;}
+  .cal-chip.type-md{background:#eaf2ee;color:#3f6b52;}
+  .cal-chip.type-planned{background:#fff;color:var(--muted);border:1px dashed var(--muted-2);}
+  .cal-chip.type-planned .chip-label{cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;}
+  .cal-chip.type-planned .chip-label:hover{color:var(--orange);}
+
+  .modal-tabs{display:flex;gap:4px;margin:0 20px 12px;background:var(--warmwhite);border:1px solid var(--line);
+    border-radius:10px;padding:3px;width:fit-content;}
+  .modal-tab{background:none;border:none;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;
+    color:var(--muted);cursor:pointer;font-family:inherit;transition:all .12s;}
+  .modal-tab:hover{color:var(--heading);}
+  .modal-tab.active{background:var(--navy);color:#fff;}
 
   .modal-overlay{position:fixed;inset:0;background:rgba(26,26,46,.45);z-index:40;
     display:flex;align-items:center;justify-content:center;}
@@ -538,8 +557,40 @@
           <h3 id="modalDateLabel">Schedule content</h3>
           <button class="modal-close" id="modalClose">&times;</button>
         </div>
-        <input id="modalSearch" type="text" placeholder="Search content...">
-        <div class="modal-list" id="modalList"></div>
+        <div class="modal-tabs">
+          <button class="modal-tab active" data-modal-tab="attach">Attach approved copy</button>
+          <button class="modal-tab" data-modal-tab="plan">Plan a post</button>
+        </div>
+        <div id="modalAttachPane">
+          <input id="modalSearch" type="text" placeholder="Search content...">
+          <div class="modal-list" id="modalList"></div>
+        </div>
+        <div id="modalPlanPane" style="display:none;">
+          <div class="add-form" style="padding:0 20px 20px;">
+            <div class="add-row">
+              <div class="add-field"><label>Bucket</label>
+                <select id="planBucket">
+                  <option value="A">A, Bullish BTC / Macro</option>
+                  <option value="B" selected>B, Arch Education</option>
+                  <option value="C">C, Campaigns</option>
+                </select>
+              </div>
+              <div class="add-field"><label>Format</label>
+                <select id="planFormat">
+                  <option value="sf" selected>Shortform post</option>
+                  <option value="md">Deep dive</option>
+                  <option value="lf">Blog / Article</option>
+                  <option value="pl">Poll</option>
+                </select>
+              </div>
+            </div>
+            <div class="add-field"><label>What's the plan?</label>
+              <textarea id="planNote" placeholder="e.g. Pillar 2 leverage post, tie to ETF flow news"></textarea>
+            </div>
+            <button class="add-submit" type="button" id="planSubmitBtn">Add to calendar</button>
+          </div>
+          <p class="note" style="margin:0 20px 16px;">Plans the kind of post going out that day before copy exists. Once it's drafted and approved, click the planned chip on the calendar to attach the real copy.</p>
+        </div>
       </div>
     </div>
 
@@ -591,6 +642,17 @@ const LS_PREFIX = 'archdash_';
 let __state = {};
 let __saveTimer = null;
 let __currentUserEmail = null;
+
+// strips <br> and any other markup down to a single-line string, so multi-line
+// thread/deep-dive drafts display the same as single-line drafts anywhere space is tight
+// (calendar chips, the schedule modal list, dashboard review/upcoming rows).
+function plainText(html){
+  return String(html==null ? '' : html)
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 async function loadRemoteState(){
   try{
@@ -707,25 +769,32 @@ function editedText(id, original){
 
 function reviewCellHTML(id){
   const status = lsGet('status_'+id, 'pending');
-  const label = status==='approved' ? 'Approved' : status==='rejected' ? 'Needs changes' : 'Pending review';
   const fb = lsGet('fb_'+id, '');
+  const btn = (key, label) => `<button class="status-btn ${key}${status===key ? ' active' : ''}" data-status-id="${id}" data-set-status="${key}">${label}</button>`;
   return `
     <div class="review-cell">
-      <span class="status-pill ${status}" data-status-id="${id}">${label}</span>
+      <div class="status-btns">
+        ${btn('approved','Approve')}
+        ${btn('pending','Pend')}
+        ${btn('rejected','Archive')}
+      </div>
       <button class="fb-toggle" data-fb-toggle="${id}">${fb ? 'Edit feedback' : '+ feedback'}</button>
       <textarea class="fb-box" data-fb-id="${id}" placeholder="Notes for the team..." style="display:${fb ? 'block' : 'none'}">${fb}</textarea>
     </div>`;
 }
 
 function wireReviewControls(){
-  document.querySelectorAll('[data-status-id]').forEach(el=>{
+  document.querySelectorAll('[data-set-status]').forEach(el=>{
     el.onclick = ()=>{
       const id = el.dataset.statusId;
-      const cur = lsGet('status_'+id,'pending');
-      const next = cur==='pending' ? 'approved' : cur==='approved' ? 'rejected' : 'pending';
+      const next = el.dataset.setStatus;
       lsSet('status_'+id, next);
-      el.className = 'status-pill '+next;
-      el.textContent = next==='approved' ? 'Approved' : next==='rejected' ? 'Needs changes' : 'Pending review';
+      const group = el.closest('.status-btns');
+      if(group){
+        group.querySelectorAll('.status-btn').forEach(b=>{
+          b.classList.toggle('active', b.dataset.setStatus === next);
+        });
+      }
       if(typeof refreshAllViews === 'function') refreshAllViews();
     };
   });
@@ -1232,6 +1301,8 @@ function dateKey(y,m,d){
   return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
 }
 
+const TYPE_LABELS = { sf:'Shortform post', md:'Deep dive', lf:'Blog / Article', pl:'Poll' };
+
 let calDate = new Date();
 calDate.setDate(1);
 
@@ -1255,11 +1326,22 @@ function renderCalendar(){
     const key = dateKey(y, m, d);
     const isToday = key === todayKey;
     const dayItems = sched[key] || [];
-    const chips = dayItems.map(it => `
-      <div class="cal-chip type-${it.type}">
-        <span class="chip-label" title="${it.text.replace(/"/g,'&quot;')}">${it.text}</span>
-        <button data-remove-key="${key}" data-remove-id="${it.id}">&times;</button>
-      </div>`).join('');
+    const chips = dayItems.map(it => {
+      if(it.kind === 'planned'){
+        const label = plainText('Planned: ' + bucketLabel(it.bucket) + ' ' + (TYPE_LABELS[it.format] || it.format) + ' — ' + it.note);
+        return `
+          <div class="cal-chip type-planned">
+            <span class="chip-label" data-attach-key="${key}" data-attach-id="${it.id}" title="${label.replace(/"/g,'&quot;')}">${label}</span>
+            <button data-remove-key="${key}" data-remove-id="${it.id}">&times;</button>
+          </div>`;
+      }
+      const text = plainText(it.text);
+      return `
+        <div class="cal-chip type-${it.type}">
+          <span class="chip-label" title="${text.replace(/"/g,'&quot;')}">${text}</span>
+          <button data-remove-key="${key}" data-remove-id="${it.id}">&times;</button>
+        </div>`;
+    }).join('');
     cells += `
       <div class="cal-day${isToday ? ' today' : ''}">
         <div class="cal-daynum">
@@ -1274,6 +1356,9 @@ function renderCalendar(){
   document.querySelectorAll('[data-add-key]').forEach(btn=>{
     btn.onclick = () => openScheduleModal(btn.dataset.addKey);
   });
+  document.querySelectorAll('[data-attach-key]').forEach(chip=>{
+    chip.onclick = () => openScheduleModal(chip.dataset.attachKey, { replaceId: chip.dataset.attachId, tab: 'attach' });
+  });
   document.querySelectorAll('[data-remove-key]').forEach(btn=>{
     btn.onclick = () => {
       const key = btn.dataset.removeKey, id = btn.dataset.removeId;
@@ -1287,36 +1372,54 @@ function renderCalendar(){
 }
 
 let pendingDateKey = null;
-function openScheduleModal(key){
+let pendingReplaceId = null;
+let modalTab = 'attach';
+
+function setModalTab(tab){
+  modalTab = tab;
+  document.querySelectorAll('.modal-tab').forEach(b => b.classList.toggle('active', b.dataset.modalTab === tab));
+  document.getElementById('modalAttachPane').style.display = tab === 'attach' ? 'block' : 'none';
+  document.getElementById('modalPlanPane').style.display = tab === 'plan' ? 'block' : 'none';
+  if(tab === 'attach') document.getElementById('modalSearch').focus();
+}
+document.querySelectorAll('.modal-tab').forEach(b=>{
+  b.onclick = () => setModalTab(b.dataset.modalTab);
+});
+
+function openScheduleModal(key, opts){
+  opts = opts || {};
   pendingDateKey = key;
+  pendingReplaceId = opts.replaceId || null;
   const [y,m,d] = key.split('-').map(Number);
   document.getElementById('modalDateLabel').textContent = 'Schedule for ' + MONTH_NAMES[m-1] + ' ' + d + ', ' + y;
   document.getElementById('modalSearch').value = '';
+  document.getElementById('planNote').value = '';
   renderModalList('');
+  setModalTab(opts.tab || 'attach');
   document.getElementById('scheduleModal').style.display = 'flex';
-  document.getElementById('modalSearch').focus();
 }
 function closeScheduleModal(){
   document.getElementById('scheduleModal').style.display = 'none';
   pendingDateKey = null;
+  pendingReplaceId = null;
 }
 function renderModalList(q){
   refreshContentPool();
   const query = q.toLowerCase();
   const rank = { approved:0, pending:1, rejected:2 };
   const matches = contentPool
-    .filter(c => c.text.toLowerCase().includes(query))
+    .filter(c => plainText(c.text).toLowerCase().includes(query))
     .slice()
     .sort((a,b) => rank[statusOf(a.id)] - rank[statusOf(b.id)]);
   document.getElementById('modalList').innerHTML = matches.slice(0, 200).map(c => {
     const s = statusOf(c.id);
     const statusTag = s==='approved' ? '<span class="badge st-confirmed">Approved</span>'
-      : s==='rejected' ? '<span class="badge st-tbd">Archived</span>' : '';
+      : s==='rejected' ? '<span class="badge st-tbd">Archived</span>' : '<span class="badge st-idea">Pending</span>';
     return `
     <div class="modal-item" data-pick-id="${c.id}">
       <span class="badge ${bucketClass(c.bucket)}">${c.typeLabel}</span>
       ${statusTag}
-      <span class="mi-text">${c.text}</span>
+      <span class="mi-text">${plainText(c.text)}</span>
     </div>`;
   }).join('') || '<p class="note" style="margin:10px 8px;">No matches.</p>';
 
@@ -1326,8 +1429,11 @@ function renderModalList(q){
       const item = contentPool.find(c => c.id === row.dataset.pickId);
       const s = getSchedule();
       s[pendingDateKey] = s[pendingDateKey] || [];
+      if(pendingReplaceId){
+        s[pendingDateKey] = s[pendingDateKey].filter(it => it.id !== pendingReplaceId);
+      }
       if(!s[pendingDateKey].some(it => it.id === item.id)){
-        s[pendingDateKey].push({ id:item.id, type:item.type, text:item.text });
+        s[pendingDateKey].push({ id:item.id, type:item.type, text:item.text, kind:'content' });
       }
       setSchedule(s);
       closeScheduleModal();
@@ -1335,6 +1441,19 @@ function renderModalList(q){
     };
   });
 }
+document.getElementById('planSubmitBtn').addEventListener('click', ()=>{
+  if(!pendingDateKey) return;
+  const note = document.getElementById('planNote').value.trim();
+  if(!note) return;
+  const bucket = document.getElementById('planBucket').value;
+  const format = document.getElementById('planFormat').value;
+  const s = getSchedule();
+  s[pendingDateKey] = s[pendingDateKey] || [];
+  s[pendingDateKey].push({ id:'plan-'+Date.now(), kind:'planned', bucket, format, note });
+  setSchedule(s);
+  closeScheduleModal();
+  renderCalendar();
+});
 
 document.getElementById('calPrev').addEventListener('click', ()=>{
   calDate.setMonth(calDate.getMonth() - 1);
@@ -1396,7 +1515,7 @@ function renderDashboardHome(){
   const metrics = [
     { label:"Total content drafted", value:totalContent, cls:"white", sub:totalContent+" items, shortform, deep dives, blog, and polls" },
     { label:"Approved", value:reviewCounts.approved, cls:"gold", sub:"of "+reviewPool.length+" items reviewed" },
-    { label:"Needs changes", value:reviewCounts.rejected, cls:"white", sub:"flagged during review" },
+    { label:"Archived", value:reviewCounts.rejected, cls:"white", sub:"parked, out of active rotation" },
     { label:"Days scheduled", value:scheduledDays, cls:"gold", sub:"on the content calendar" },
   ];
   document.getElementById('metrics').innerHTML = metrics.map(m=>`
@@ -1406,24 +1525,22 @@ function renderDashboardHome(){
       <div class="m-sub">${m.sub}</div>
     </div>`).join('');
 
-  // needs your review: rejected first, then pending, approved excluded
+  // needs your review: pending only, approve/archive both remove it from this queue
   const typeLabels = { sf:'Shortform', md:'Deep dive', lf:'Blog / Article', pl:'Poll', cat:'Catalyst' };
   const needing = reviewPool
-    .filter(it => statusOf(it.id) !== 'approved')
-    .sort((a,b) => (statusOf(a.id)==='rejected'?0:1) - (statusOf(b.id)==='rejected'?0:1))
+    .filter(it => statusOf(it.id) === 'pending')
     .slice(0, 6);
   const needsReviewEl = document.getElementById('needsReview');
   if(needing.length === 0){
-    needsReviewEl.innerHTML = '<div class="empty-state">Everything reviewed so far is approved. Nice.</div>';
+    needsReviewEl.innerHTML = '<div class="empty-state">Nothing pending, everything\'s been approved or archived.</div>';
   } else {
     needsReviewEl.innerHTML = needing.map(it => {
-      const s = statusOf(it.id);
       return `
       <div class="nr-item">
-        <span class="nr-dot ${s}"></span>
+        <span class="nr-dot pending"></span>
         <div class="nr-text">
-          <p class="nr-title">${it.text}</p>
-          <span class="nr-meta">${typeLabels[it.type]}, ${s==='rejected' ? 'needs changes' : 'pending review'}</span>
+          <p class="nr-title">${plainText(it.text)}</p>
+          <span class="nr-meta">${typeLabels[it.type]}, pending review</span>
         </div>
         <button class="nr-go" data-goto-section="${it.section}" ${it.sub ? `data-goto-sub="${it.sub}"` : ''}>Review</button>
       </div>`;
@@ -1450,7 +1567,7 @@ function renderDashboardHome(){
       return `
       <div class="cu-item">
         <div class="cu-date"><span class="cu-day">${d}</span>${MONTH_ABBR[m-1]}</div>
-        <span class="cu-text">${u.text}</span>
+        <span class="cu-text">${plainText(u.text)}</span>
       </div>`;
     }).join('');
   }
@@ -1483,7 +1600,7 @@ function renderDashboardHome(){
   __statusChart = new Chart(document.getElementById('statusChart'), {
     type: 'doughnut',
     data: {
-      labels: ['Approved', 'Pending review', 'Needs changes'],
+      labels: ['Approved', 'Pending review', 'Archived'],
       datasets: [{
         data: [reviewCounts.approved, reviewCounts.pending, reviewCounts.rejected],
         backgroundColor: ['#4a7a5f', '#c9c3ae', '#b8492f'],
