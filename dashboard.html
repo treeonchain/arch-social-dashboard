@@ -214,6 +214,8 @@
   .card h3{margin:0 0 9px;font-size:14.5px;font-weight:600;color:var(--heading);}
   .card p{margin:0 0 9px;font-size:13px;line-height:1.6;color:#3a382f;}
   .card .angles{font-size:12px;color:var(--muted);line-height:1.7;}
+  .card .owner-doc-row{display:flex;gap:8px;margin-top:10px;}
+  .card .owner-doc-row .cell-input{min-width:0;}
 
   .urgent-group{background:#fff;border:1px solid var(--line);border-radius:var(--radius);
     padding:20px 24px;box-shadow:var(--shadow-sm);margin-bottom:16px;}
@@ -298,6 +300,7 @@
   .cal-chip.type-lf{background:#e7edf7;color:#3a5a9c;}
   .cal-chip.type-pl{background:#f7e9f1;color:#9c4a76;}
   .cal-chip.type-md{background:#eaf2ee;color:#3f6b52;}
+  .cal-chip.type-lrn{background:#e9eef7;color:#3a4f8c;}
   .cal-chip.type-planned{background:#fdeed4;color:#8a5a12;border:1.5px dashed #e8ab4d;font-weight:600;}
   .cal-chip.type-planned .chip-label{cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;}
   .cal-chip.type-planned .chip-label:hover{color:var(--orange);}
@@ -377,6 +380,7 @@
   <nav class="sb-nav">
     <button class="sb-item active" data-section="dashboard"><span class="dot"></span><span class="label">Dashboard</span></button>
     <button class="sb-item" data-section="content"><span class="dot"></span><span class="label">Content</span></button>
+    <button class="sb-item" data-section="learn"><span class="dot"></span><span class="label">Learn</span></button>
     <button class="sb-item" data-section="schedule"><span class="dot"></span><span class="label">Schedule</span></button>
     <button class="sb-item" data-section="catalysts"><span class="dot"></span><span class="label">GTM Catalysts</span></button>
     <button class="sb-item" data-section="narrative"><span class="dot"></span><span class="label">Narrative</span></button>
@@ -423,7 +427,7 @@
         </div>
         <div class="panel">
           <h2>Review status</h2>
-          <p class="p-sub">Across every drafted item, shortform, deep dives, blog, polls, and catalysts</p>
+          <p class="p-sub">Across every drafted item, shortform, deep dives, blog, polls, learn materials, and catalysts</p>
           <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
         </div>
       </div>
@@ -461,6 +465,8 @@
                 <th data-k="pillar">Pillar</th>
                 <th data-k="format">Format</th>
                 <th data-k="preview">Preview</th>
+                <th>Owner</th>
+                <th>Doc</th>
                 <th data-k="status">Status</th>
                 <th>Review</th>
               </tr>
@@ -488,6 +494,8 @@
                 <th data-k="bucket">Bucket</th>
                 <th data-k="pillar">Pillar</th>
                 <th data-k="preview">Preview</th>
+                <th>Owner</th>
+                <th>Doc</th>
                 <th data-k="status">Status</th>
                 <th>Review</th>
               </tr>
@@ -511,7 +519,7 @@
             <button class="add-btn" id="addLfBtn">+ New article</button>
           </div>
           <table>
-            <thead><tr><th>Title</th><th>Bucket</th><th>Stage</th><th>Target date</th><th>Link</th><th>Review</th></tr></thead>
+            <thead><tr><th>Title</th><th>Bucket</th><th>Owner</th><th>Stage</th><th>Target date</th><th>Working doc</th><th>Link</th><th>Review</th></tr></thead>
             <tbody id="longformBody"></tbody>
           </table>
         </div>
@@ -531,6 +539,26 @@
         </div>
         <div class="grid" id="pollsGrid"></div>
       </div>
+    </section>
+
+    <section id="sec-learn" class="sec">
+      <div class="table-panel">
+        <div class="table-head">
+          <h2>Learn, larger materials</h2>
+          <div class="status-filter" data-type="lrn">
+            <button class="status-filter-btn active" data-status="active">Active</button>
+            <button class="status-filter-btn" data-status="pending">Pending</button>
+            <button class="status-filter-btn" data-status="approved">Approved</button>
+            <button class="status-filter-btn" data-status="archived">Archived</button>
+          </div>
+          <button class="add-btn" id="addLrnBtn">+ New material</button>
+        </div>
+        <table>
+          <thead><tr><th>Title</th><th>Type</th><th>Owner</th><th>Stage</th><th>Target date</th><th>Working doc</th><th>Link</th><th>Review</th></tr></thead>
+          <tbody id="learnBody"></tbody>
+        </table>
+      </div>
+      <p class="note">The bigger, slower-moving reference materials, light paper, white paper, decks, one-pagers, anything meant to be read end to end rather than scrolled past. Same stage flow as Blog / Articles: Idea, Drafting, In review, Ready to publish, Published.</p>
     </section>
 
     <section id="sec-schedule" class="sec">
@@ -582,6 +610,7 @@
                   <option value="md">Deep dive</option>
                   <option value="lf">Blog / Article</option>
                   <option value="pl">Poll</option>
+                  <option value="lrn">Learn material</option>
                 </select>
               </div>
             </div>
@@ -835,12 +864,32 @@ function wireReviewControls(){
   });
 }
 
+// ---- owner + working doc, same per-item pattern as review status ----
+const OWNERS = ['Unassigned', 'Tree', 'Mohamed'];
+function ownerCellHTML(id){
+  const current = lsGet('owner_'+id, 'Unassigned');
+  return `<select class="cell-input" data-owner-id="${id}">${OWNERS.map(o=>
+    `<option value="${o}"${o===current ? ' selected' : ''}>${o}</option>`).join('')}</select>`;
+}
+function docCellHTML(id){
+  const doc = lsGet('doc_'+id, '');
+  return `<input type="url" class="cell-input" data-doc-id="${id}" placeholder="Working doc link" value="${doc.replace(/"/g,'&quot;')}">`;
+}
+function wireOwnerDocControls(){
+  document.querySelectorAll('[data-owner-id]').forEach(el=>{
+    el.onchange = ()=>{ lsSet('owner_'+el.dataset.ownerId, el.value); };
+  });
+  document.querySelectorAll('[data-doc-id]').forEach(el=>{
+    el.onblur = ()=>{ lsSet('doc_'+el.dataset.docId, el.value); };
+  });
+}
+
 // ---- table ----
 let activeFilter = 'all';
 let sortKey = null, sortDir = 1;
 
 // ---- per-type review-status filter (Active / Pending / Approved / Archived) ----
-const statusFilters = { sf:'active', md:'active', lf:'active', pl:'active' };
+const statusFilters = { sf:'active', md:'active', lf:'active', pl:'active', lrn:'active' };
 function passesStatusFilter(type, id){
   const s = statusOf(id);
   const f = statusFilters[type];
@@ -861,6 +910,7 @@ function wireStatusFilters(){
         if(type==='md') renderMedium();
         if(type==='lf') renderLongform();
         if(type==='pl') renderPolls();
+        if(type==='lrn') renderLearn();
       };
     });
   });
@@ -900,11 +950,14 @@ function render(){
         <div class="preview" contenteditable="true" data-edit-id="${id}">${editedText(id, i.preview)}</div>
         ${i.image ? `<div class="img-idea">Image idea: ${i.image}</div>` : ''}
       </td>
+      <td>${ownerCellHTML(id)}</td>
+      <td>${docCellHTML(id)}</td>
       <td><span class="badge ${statusClass(i.status)}">${i.status}</span></td>
       <td>${reviewCellHTML(id)}</td>
     </tr>`;
   }).join('');
   wireReviewControls();
+  wireOwnerDocControls();
 }
 render();
 
@@ -1011,13 +1064,16 @@ function renderLongform(){
     <tr>
       <td contenteditable="true" data-edit-id="${id}">${editedText(id, it.title)}</td>
       <td><span class="badge ${bucketClass(it.bucket)}">${it.bucket}</span></td>
+      <td>${ownerCellHTML(id)}</td>
       <td><span class="badge ${stageClass(stage)} stage-pill" data-stage-id="${id}">${stage}</span></td>
       <td><input type="date" class="cell-input" data-date-id="${id}" value="${date}"></td>
+      <td>${docCellHTML(id)}</td>
       <td><input type="url" class="cell-input" data-link-id="${id}" placeholder="Link once live" value="${link.replace(/"/g,'&quot;')}"></td>
       <td>${reviewCellHTML(id)}</td>
     </tr>`;
   }).join('');
   wireReviewControls();
+  wireOwnerDocControls();
   wireBlogControls();
 }
 function wireBlogControls(){
@@ -1068,11 +1124,14 @@ function renderMedium(){
       <td><span class="badge ${bucketClass(it.bucket)}">${bucketLabel(it.bucket)}</span></td>
       <td>${it.pillar}</td>
       <td class="preview-lg" contenteditable="true" data-edit-id="${id}">${editedText(id, it.preview)}</td>
+      <td>${ownerCellHTML(id)}</td>
+      <td>${docCellHTML(id)}</td>
       <td><span class="badge ${statusClass(it.status)}">${it.status}</span></td>
       <td>${reviewCellHTML(id)}</td>
     </tr>`;
   }).join('');
   wireReviewControls();
+  wireOwnerDocControls();
 }
 renderMedium();
 
@@ -1107,12 +1166,59 @@ function renderPolls(){
       <h3 contenteditable="true" data-edit-id="${id}-q">${editedText(id+'-q', p.q)}</h3>
       <span class="badge bg-b">${p.pillar}</span>
       <p contenteditable="true" data-edit-id="${id}-opts" style="margin-top:8px;">${editedText(id+'-opts', p.opts)}</p>
+      <div class="owner-doc-row">${ownerCellHTML(id)}${docCellHTML(id)}</div>
       ${reviewCellHTML(id)}
     </div>`;
   }).join('');
   wireReviewControls();
+  wireOwnerDocControls();
 }
 renderPolls();
+
+// ---- learn: larger reference materials, light paper / white paper / decks ----
+const MAT_TYPES = ['Light Paper', 'White Paper', 'Deck', 'One-Pager', 'Other'];
+function matTypeCellHTML(id, fallback){
+  const current = lsGet('mattype_'+id, fallback || 'Other');
+  return `<select class="cell-input" data-mattype-id="${id}">${MAT_TYPES.map(t=>
+    `<option value="${t}"${t===current ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
+}
+function wireLearnExtras(){
+  document.querySelectorAll('[data-mattype-id]').forEach(el=>{
+    el.onchange = ()=>{ lsSet('mattype_'+el.dataset.mattypeId, el.value); };
+  });
+}
+let learnItems = [
+  {title:'Light Paper Release', matType:'Light Paper', bucket:'B', stage:'Idea', source:'Catalyst map, Phase 1 — the unlock, published and reviewable'},
+  {title:'White Paper v2', matType:'White Paper', bucket:'B', stage:'Idea', source:'Catalyst map, Phase 1 — internal credibility backbone'},
+];
+try{ learnItems = learnItems.concat(JSON.parse(lsGet('custom_lrn', '[]'))); }catch(e){}
+
+function renderLearn(){
+  const visible = learnItems
+    .map((it,idx)=>({ it, id:'lrn-'+idx }))
+    .filter(x => passesStatusFilter('lrn', x.id));
+  document.getElementById('learnBody').innerHTML = visible.map(({it,id})=>{
+    const stage = lsGet('stage_'+id, it.stage || 'Idea');
+    const date = lsGet('date_'+id, it.targetDate || '');
+    const link = lsGet('link_'+id, it.link || '');
+    return `
+    <tr>
+      <td contenteditable="true" data-edit-id="${id}">${editedText(id, it.title)}</td>
+      <td>${matTypeCellHTML(id, it.matType)}</td>
+      <td>${ownerCellHTML(id)}</td>
+      <td><span class="badge ${stageClass(stage)} stage-pill" data-stage-id="${id}">${stage}</span></td>
+      <td><input type="date" class="cell-input" data-date-id="${id}" value="${date}"></td>
+      <td>${docCellHTML(id)}</td>
+      <td><input type="url" class="cell-input" data-link-id="${id}" placeholder="Link once live" value="${link.replace(/"/g,'&quot;')}"></td>
+      <td>${reviewCellHTML(id)}</td>
+    </tr>`;
+  }).join('');
+  wireReviewControls();
+  wireOwnerDocControls();
+  wireLearnExtras();
+  wireBlogControls();
+}
+renderLearn();
 
 // ---- catalyst map ----
 const catalystItems = [
@@ -1184,6 +1290,8 @@ function refreshContentPool(){
       text: editedText('lf-'+idx, it.title) })),
     ...pollItems.map((p,idx)=>({ id:'pl-'+idx, type:'pl', typeLabel:'Poll', bucket:'B',
       text: editedText('pl-'+idx+'-q', p.q) })),
+    ...learnItems.map((it,idx)=>({ id:'lrn-'+idx, type:'lrn', typeLabel:'Learn', bucket:it.bucket || 'B',
+      text: editedText('lrn-'+idx, it.title) })),
   ];
 }
 refreshContentPool();
@@ -1194,6 +1302,7 @@ function refreshAllViews(){
   renderMedium();
   renderLongform();
   renderPolls();
+  renderLearn();
   if(typeof renderDashboardHome === 'function') renderDashboardHome();
 }
 wireStatusFilters();
@@ -1272,6 +1381,25 @@ const ADD_FORMS = {
       renderPolls();
     },
   },
+  lrn: {
+    title: 'Add a learn material',
+    fields: `
+      <div class="add-field"><label>Title</label><input name="title" type="text" required></div>
+      <div class="add-row">
+        <div class="add-field"><label>Type</label>
+          <select name="matType">${MAT_TYPES.map(t=>`<option value="${t}"${t==='Other' ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        </div>
+        <div class="add-field"><label>Stage</label>
+          <select name="stage">${STAGES.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+        </div>
+      </div>
+      <button class="add-submit" type="submit">Add material</button>`,
+    submit(fd){
+      learnItems.push({ title: fd.get('title'), matType: fd.get('matType'), bucket: 'B', stage: fd.get('stage'), source: 'Added manually' });
+      persistCustom('custom_lrn', learnItems, 2);
+      renderLearn();
+    },
+  },
 };
 function persistCustom(key, arr, builtInCount){
   lsSet(key, JSON.stringify(arr.slice(builtInCount)));
@@ -1292,6 +1420,7 @@ document.getElementById('addSfBtn').addEventListener('click', ()=> openAddModal(
 document.getElementById('addMdBtn').addEventListener('click', ()=> openAddModal('md'));
 document.getElementById('addLfBtn').addEventListener('click', ()=> openAddModal('lf'));
 document.getElementById('addPlBtn').addEventListener('click', ()=> openAddModal('pl'));
+document.getElementById('addLrnBtn').addEventListener('click', ()=> openAddModal('lrn'));
 document.getElementById('addModalClose').addEventListener('click', closeAddModal);
 document.getElementById('addModal').addEventListener('click', (e)=>{
   if(e.target.id === 'addModal') closeAddModal();
@@ -1315,7 +1444,7 @@ function dateKey(y,m,d){
   return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
 }
 
-const TYPE_LABELS = { sf:'Shortform post', md:'Deep dive', lf:'Blog / Article', pl:'Poll' };
+const TYPE_LABELS = { sf:'Shortform post', md:'Deep dive', lf:'Blog / Article', pl:'Poll', lrn:'Learn material' };
 
 let calDate = new Date();
 calDate.setDate(1);
@@ -1540,10 +1669,10 @@ function renderDashboardHome(){
   const sched = getSchedule();
   const scheduledDays = Object.keys(sched).filter(k => (sched[k] || []).length > 0).length;
 
-  const totalContent = items.length + mediumItems.length + longformItems.length + pollItems.length;
+  const totalContent = items.length + mediumItems.length + longformItems.length + pollItems.length + learnItems.length;
 
   const metrics = [
-    { label:"Total content drafted", value:totalContent, cls:"white", sub:totalContent+" items, shortform, deep dives, blog, and polls" },
+    { label:"Total content drafted", value:totalContent, cls:"white", sub:totalContent+" items, shortform, deep dives, blog, polls, and learn materials" },
     { label:"Approved", value:reviewCounts.approved, cls:"gold", sub:"of "+reviewPool.length+" items reviewed" },
     { label:"Archived", value:reviewCounts.rejected, cls:"white", sub:"parked, out of active rotation" },
     { label:"Days scheduled", value:scheduledDays, cls:"gold", sub:"on the content calendar" },
@@ -1556,7 +1685,7 @@ function renderDashboardHome(){
     </div>`).join('');
 
   // needs your review: pending only, approve/archive both remove it from this queue
-  const typeLabels = { sf:'Shortform', md:'Deep dive', lf:'Blog / Article', pl:'Poll', cat:'Catalyst' };
+  const typeLabels = { sf:'Shortform', md:'Deep dive', lf:'Blog / Article', pl:'Poll', lrn:'Learn', cat:'Catalyst' };
   const needing = reviewPool
     .filter(it => statusOf(it.id) === 'pending')
     .slice(0, 6);
