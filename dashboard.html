@@ -643,13 +643,26 @@ let __state = {};
 let __saveTimer = null;
 let __currentUserEmail = null;
 
-// strips <br> and any other markup down to a single-line string, so multi-line
-// thread/deep-dive drafts display the same as single-line drafts anywhere space is tight
-// (calendar chips, the schedule modal list, dashboard review/upcoming rows).
-function plainText(html){
+// takes just the opening line of a draft (the part before the first <br>) and strips
+// markup/newlines, so multi-line thread/deep-dive drafts show a clean single-line preview
+// anywhere space is tight (calendar chips, the schedule modal list, dashboard review/
+// upcoming rows) instead of every paragraph run together into one unreadable sentence.
+// Single-line drafts have no <br> at all, so this is a no-op for them.
+function previewLine(html){
+  const firstSegment = String(html==null ? '' : html).split(/<br\s*\/?>/i)[0];
+  return firstSegment
+    .replace(/<[^>]+>/g, '')
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+// full text, markup stripped, all paragraphs joined -- used only for matching search
+// queries against multi-line drafts, never for display (see previewLine for that).
+function searchableText(html){
   return String(html==null ? '' : html)
     .replace(/<br\s*\/?>/gi, ' ')
     .replace(/<[^>]+>/g, '')
+    .replace(/[\r\n]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -1328,14 +1341,14 @@ function renderCalendar(){
     const dayItems = sched[key] || [];
     const chips = dayItems.map(it => {
       if(it.kind === 'planned'){
-        const label = plainText('Planned: ' + bucketLabel(it.bucket) + ' ' + (TYPE_LABELS[it.format] || it.format) + ' — ' + it.note);
+        const label = previewLine('Planned: ' + bucketLabel(it.bucket) + ' ' + (TYPE_LABELS[it.format] || it.format) + ' — ' + it.note);
         return `
           <div class="cal-chip type-planned">
             <span class="chip-label" data-attach-key="${key}" data-attach-id="${it.id}" title="${label.replace(/"/g,'&quot;')}">${label}</span>
             <button data-remove-key="${key}" data-remove-id="${it.id}">&times;</button>
           </div>`;
       }
-      const text = plainText(it.text);
+      const text = previewLine(it.text);
       return `
         <div class="cal-chip type-${it.type}">
           <span class="chip-label" title="${text.replace(/"/g,'&quot;')}">${text}</span>
@@ -1408,7 +1421,7 @@ function renderModalList(q){
   const query = q.toLowerCase();
   const rank = { approved:0, pending:1, rejected:2 };
   const matches = contentPool
-    .filter(c => plainText(c.text).toLowerCase().includes(query))
+    .filter(c => searchableText(c.text).toLowerCase().includes(query))
     .slice()
     .sort((a,b) => rank[statusOf(a.id)] - rank[statusOf(b.id)]);
   document.getElementById('modalList').innerHTML = matches.slice(0, 200).map(c => {
@@ -1419,7 +1432,7 @@ function renderModalList(q){
     <div class="modal-item" data-pick-id="${c.id}">
       <span class="badge ${bucketClass(c.bucket)}">${c.typeLabel}</span>
       ${statusTag}
-      <span class="mi-text">${plainText(c.text)}</span>
+      <span class="mi-text">${previewLine(c.text)}</span>
     </div>`;
   }).join('') || '<p class="note" style="margin:10px 8px;">No matches.</p>';
 
@@ -1539,7 +1552,7 @@ function renderDashboardHome(){
       <div class="nr-item">
         <span class="nr-dot pending"></span>
         <div class="nr-text">
-          <p class="nr-title">${plainText(it.text)}</p>
+          <p class="nr-title">${previewLine(it.text)}</p>
           <span class="nr-meta">${typeLabels[it.type]}, pending review</span>
         </div>
         <button class="nr-go" data-goto-section="${it.section}" ${it.sub ? `data-goto-sub="${it.sub}"` : ''}>Review</button>
@@ -1567,7 +1580,7 @@ function renderDashboardHome(){
       return `
       <div class="cu-item">
         <div class="cu-date"><span class="cu-day">${d}</span>${MONTH_ABBR[m-1]}</div>
-        <span class="cu-text">${plainText(u.text)}</span>
+        <span class="cu-text">${previewLine(u.text)}</span>
       </div>`;
     }).join('');
   }
